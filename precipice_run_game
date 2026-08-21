@@ -1,0 +1,902 @@
+<!-- THE PRECIPICE RUN — a playable solo RPG session Version .10 -->
+<!-- Original scenario for FASA-era Star Trek: The Role Playing Game. Single self-contained file; runs offline. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Precipice Run — A Triangle Adventure</title>
+<style>
+:root{
+  --void:#0a0e14; --panel:#111a24; --panel2:#0d151d; --edge:#233240;
+  --amber:#f0a830; --amber-dim:#a9772a; --cyan:#5fd3e8; --rust:#d0563a;
+  --ink:#ece4d3; --dim:#7d8b98; --good:#6fcf74;
+  --k:#d0463a; --f:#4a90d9; --r:#39b06e; --o:#e0b23c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--void);color:var(--ink);
+  font-family:"DejaVu Sans Mono",ui-monospace,"Courier New",monospace;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 600px at 70% -10%, rgba(240,168,48,.06), transparent 60%),
+  radial-gradient(900px 500px at 10% 110%, rgba(95,211,232,.05), transparent 60%),
+  var(--void)}
+.wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+h1,h2,h3,.eyebrow,.btn,.hud-lbl{font-family:"Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.eyebrow{color:var(--amber);font-size:12px;letter-spacing:.32em;margin:0 0 6px}
+h1{font-size:30px;margin:.1em 0 .1em;color:var(--ink);line-height:1.05;
+  text-shadow:0 0 22px rgba(240,168,48,.25)}
+h1 .sub{display:block;font-size:13px;letter-spacing:.28em;color:var(--dim);margin-top:8px}
+h2{font-size:17px;color:var(--amber);margin:0 0 10px;letter-spacing:.2em}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:5;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.13) 2px 3px);
+  mix-blend-mode:multiply;opacity:.5}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--edge);border-radius:14px;padding:18px 18px;margin:14px 0;
+  box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 10px 30px rgba(0,0,0,.35)}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--edge),transparent);margin:14px 0}
+p{margin:0 0 12px}
+.story p{color:#e3dccb}
+.dim{color:var(--dim)}
+.amber{color:var(--amber)} .cyan{color:var(--cyan)} .rust{color:var(--rust)}
+em{color:var(--cyan);font-style:italic}
+.btn{display:block;width:100%;text-align:left;cursor:pointer;margin:9px 0;
+  background:#0e1620;color:var(--ink);border:1px solid var(--edge);border-left:3px solid var(--amber);
+  border-radius:9px;padding:12px 14px;font-size:13px;letter-spacing:.06em;transition:.12s;line-height:1.4}
+.btn:hover{background:#132133;border-left-color:var(--cyan);transform:translateX(2px)}
+.btn:disabled{opacity:.35;cursor:not-allowed;border-left-color:var(--dim);transform:none}
+.btn .lock{color:var(--rust);font-size:11px;letter-spacing:.1em;display:block;margin-top:4px;text-transform:none;font-family:"DejaVu Sans Mono",monospace}
+.btn .tag{color:var(--cyan);font-size:11px;letter-spacing:.1em;display:block;margin-top:4px;text-transform:none;font-family:"DejaVu Sans Mono",monospace}
+.btn.small{width:auto;display:inline-block;text-align:center;border-left-width:3px;margin:6px 6px 0 0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{flex:1 1 160px}
+/* HUD */
+.hud{position:sticky;top:0;z-index:6;background:rgba(9,13,19,.94);backdrop-filter:blur(4px);
+  border:1px solid var(--edge);border-radius:12px;padding:10px 12px;margin:6px 0 4px;
+  box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.hud-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hud-id{font-size:12px;letter-spacing:.08em;color:var(--dim)}
+.hud-id b{color:var(--amber);letter-spacing:.12em}
+.lat{font-family:"Arial Narrow",sans-serif;letter-spacing:.14em;color:var(--amber);
+  font-size:15px;font-weight:700;white-space:nowrap}
+.lat .glow{text-shadow:0 0 12px rgba(240,168,48,.5)}
+.bars{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.stand{flex:1 1 90px;min-width:90px}
+.stand .hud-lbl{font-size:10px;letter-spacing:.12em;color:var(--dim);display:flex;justify-content:space-between}
+.track{height:7px;background:#0a121a;border:1px solid var(--edge);border-radius:5px;margin-top:3px;position:relative;overflow:hidden}
+.track .fill{position:absolute;top:0;bottom:0;left:50%;width:0;transition:.4s}
+.mid{position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:var(--dim);opacity:.5}
+.attrs{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.attr{flex:1 1 60px;background:#0b131b;border:1px solid var(--edge);border-radius:7px;padding:5px 4px;text-align:center}
+.attr .k{font-size:9px;letter-spacing:.14em;color:var(--dim)}
+.attr .v{font-size:16px;font-weight:700;font-family:"Arial Narrow",sans-serif;color:var(--ink)}
+.toks{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap}
+.tok{font-size:10px;letter-spacing:.06em;background:#10202b;border:1px solid var(--cyan);
+  color:var(--cyan);border-radius:20px;padding:2px 9px}
+.hull{display:flex;align-items:center;gap:8px;margin-top:9px}
+.hull .track{flex:1;height:9px}
+.hull .fill2{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--rust),var(--amber));transition:.3s}
+/* creator */
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:620px){.grid2{grid-template-columns:1fr 1fr}}
+.race{cursor:pointer;background:#0e1620;border:1px solid var(--edge);border-radius:11px;padding:12px 13px;transition:.12s}
+.race:hover{border-color:var(--cyan)}
+.race.sel{border-color:var(--amber);background:#151f2b;box-shadow:0 0 0 1px var(--amber) inset}
+.race h3{margin:0 0 4px;font-size:14px;letter-spacing:.16em;color:var(--amber)}
+.race .mods{font-size:11px;color:var(--cyan);letter-spacing:.04em;margin:4px 0}
+.race .trait{font-size:11.5px;color:var(--dim);line-height:1.4}
+.field{margin:12px 0}
+label.fl{display:block;font-size:11px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-bottom:5px;font-family:"Arial Narrow",sans-serif}
+input[type=text]{width:100%;background:#0a121a;border:1px solid var(--edge);color:var(--ink);
+  border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px}
+input[type=text]:focus{outline:none;border-color:var(--amber)}
+.rollrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.diebox{width:52px;height:52px;border:1px solid var(--edge);border-radius:9px;background:#0b131b;
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
+  font-family:"Arial Narrow",sans-serif;color:var(--amber);position:relative}
+.diebox .k2{position:absolute;top:3px;left:6px;font-size:8px;letter-spacing:.1em;color:var(--dim)}
+.diebox .m{position:absolute;bottom:2px;right:5px;font-size:9px;color:var(--cyan)}
+/* overlay */
+.ovl{position:fixed;inset:0;z-index:20;background:rgba(6,9,13,.82);display:flex;
+  align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.ovl-card{background:linear-gradient(180deg,#12202c,#0c161f);border:1px solid var(--amber);
+  border-radius:16px;padding:22px;max-width:420px;width:100%;text-align:center;
+  box-shadow:0 0 40px rgba(240,168,48,.2)}
+.d10{width:74px;height:74px;margin:6px auto;border:2px solid var(--cyan);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;
+  font-family:"Arial Narrow",sans-serif;color:var(--cyan);background:#08131a;
+  box-shadow:0 0 24px rgba(95,211,232,.3)}
+.rolling{animation:shk .09s infinite}
+@keyframes shk{0%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}100%{transform:translate(1px,1px)}}
+.verdict{font-family:"Arial Narrow",sans-serif;letter-spacing:.2em;font-size:22px;margin:8px 0 4px}
+.verdict.win{color:var(--good)} .verdict.lose{color:var(--rust)}
+.mathline{font-size:12px;color:var(--dim);letter-spacing:.06em}
+.title-hero{text-align:center;padding:26px 10px 6px}
+.title-hero .frame{border:1px solid var(--edge);border-radius:16px;padding:26px 18px;
+  background:radial-gradient(600px 300px at 50% 0%,rgba(240,168,48,.08),transparent 70%)}
+.blink{animation:bl 1.1s steps(1) infinite;color:var(--amber)}
+@keyframes bl{50%{opacity:0}}
+.foot{color:var(--dim);font-size:11px;letter-spacing:.05em;margin-top:22px;text-align:center;line-height:1.6}
+.save{font-size:11px;word-break:break-all;background:#0a121a;border:1px dashed var(--edge);
+  border-radius:8px;padding:10px;color:var(--cyan);max-height:120px;overflow:auto}
+.ending-badge{display:inline-block;border:1px solid var(--amber);color:var(--amber);border-radius:20px;
+  padding:4px 14px;letter-spacing:.2em;font-family:"Arial Narrow",sans-serif;font-size:13px;margin-bottom:8px}
+.combat-foe{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 10px}
+.mini{font-size:11px;color:var(--dim);letter-spacing:.05em}
+@media (prefers-reduced-motion: reduce){.rolling{animation:none}.blink{animation:none}}
+</style>
+
+<div class="scan"></div>
+<div class="wrap"><div id="app"></div>
+<div class="foot">The Precipice Run · an original scenario for FASA-era <span class="dim">Star Trek: The Role Playing Game</span><br>
+For personal tabletop use. Not affiliated with or endorsed by any rights holder.</div>
+</div>
+
+<script>
+/* ============================ DATA ============================ */
+const ATTRS = ["STR","END","INT","DEX","CHA","LUC"];
+const ATTR_NAME = {STR:"Strength",END:"Endurance",INT:"Intellect",DEX:"Dexterity",CHA:"Presence",LUC:"Luck"};
+
+const RACES = {
+  Human:{mods:{LUC:1,CHA:1}, trait:"Adaptable", desc:"One free re-roll on any failed check, once per game.",
+    start:s=>{s.freeReroll=true}},
+  Vulcan:{mods:{INT:3,STR:2,END:1,CHA:-2}, trait:"Cold Logic", desc:"+3 on any Intellect check, and may substitute Intellect for a bluff.",
+    start:s=>{}},
+  Andorian:{mods:{STR:2,DEX:2,END:1,CHA:-1}, trait:"Martial", desc:"+2 to all combat rolls, ship or personal.",
+    start:s=>{}},
+  Tellarite:{mods:{END:2,CHA:2,STR:1,DEX:-1}, trait:"Argumentative", desc:"+3 on negotiation and intimidation checks.",
+    start:s=>{}},
+  Klingon:{mods:{STR:2,END:2,DEX:1,CHA:-1}, trait:"Warrior's Honor", desc:"+3 intimidating Klingons. Begin with Klingon standing +1.",
+    start:s=>{s.stand.k+=1}},
+  Romulan:{mods:{INT:2,DEX:1,END:1,CHA:1}, trait:"Guile", desc:"+2 on deception. A fellow Romulan trusts you sooner.",
+    start:s=>{s.romulanKin=true}},
+  Orion:{mods:{CHA:2,DEX:2,STR:-1}, trait:"Merchant Prince", desc:"+2 on trade. Begin with Orion standing +1 and 5 extra bars.",
+    start:s=>{s.stand.o+=1; s.latinum+=5}}
+};
+
+const TOK = {
+  orionDebt:"Orion Debt", verronWord:"Verron's Word", sfi:"SFI Transponder",
+  stal:"S'Tal's Trust", kfavor:"Klingon Favor", blind:"Flying Blind",
+  suspicious:"Suspicious", sfiOwed:"SFI Owes You", freeworlds:"Friend of Free Worlds"
+};
+
+/* Each node: text(html) + choices[]. A choice may carry: goto, effect(s), cond(s),
+   check{...} (dice), or combat:true. Endings use {ending:name}. */
+const NODES = {
+p1:{eye:"Berth 7 · Landerrabb System", title:"Haven",
+  text:`<p>The world called <b>Haven</b> turns beneath you — rust-red desert, neon dock-lights, deep in the independent reaches of the Triangle where no empire's flag flies unchallenged.</p>
+  <p>The <em>Verity's Gambit</em> sits in a rented berth with an empty hold and a fuel gauge that makes your quartermaster wince. You need a contract. You always need a contract.</p>
+  <p>The <b>Sundog Cantina</b> is where cargo finds captains. You take a table in the back and wait. You do not wait long — <span class="amber">three</span> people want to talk to you tonight. Which, in your experience, means one cargo that three powers are already fighting over.</p>`,
+  choices:[{t:"Hear them out", goto:"p2"}]},
+
+p2:{eye:"Sundog Cantina", title:"Three Offers",
+  text:`<p>They come one at a time, as if they'd drawn lots.</p>
+  <p><span class="amber">Broker Sitar</span>, a green-skinned Orion of the Frontier Mercantile Association, slides a chit across the table. <em>"One sealed cryo-container. Haven to Precipice. No questions, no scans. Thirty bars on delivery. My associates remember men who lack discretion."</em></p>
+  <p><span class="cyan">Della Verron</span>, agent of the Affiliation of Outer Free Worlds, meets your eye. <em>"We'll match the Orion and add the truth: that container matters to free people everywhere. Twenty-five bars — and a debt the Affiliation pays."</em></p>
+  <p>And a quiet, gray-suited man who calls himself <span class="dim">Mr. Grey</span> leaves a transponder on the table. <em>"They're both lying about the contents. Take their contract. But take this too — signal us before you open the doors at Precipice."</em></p>`,
+  choices:[
+    {t:"Take the Orion job — best pay, fewest questions",
+      effect:s=>{s.contract="orion"; s.pay=30; s.stand.o+=1; s.tokens.orionDebt=true}, goto:"p3"},
+    {t:"Take the Affiliation job — Verron feels honest",
+      effect:s=>{s.contract="aff"; s.pay=25; s.tokens.verronWord=true}, goto:"p4"},
+    {t:"Take no one's money — pocket Grey's transponder and dig first",
+      effect:s=>{s.contract="orion"; s.pay=30; s.stand.o+=1; s.stand.f+=1; s.tokens.orionDebt=true; s.tokens.sfi=true; s.tokens.suspicious=true}, goto:"p5"}
+  ]},
+
+p3:{eye:"Contract Sealed", title:"The Orion's Coin",
+  text:`<p>You take Sitar's chit. <span class="amber">Thirty bars promised</span> on delivery. The Orions now feel that <em>you</em> owe <em>them</em> — which is how they prefer all relationships.</p>
+  <p><em>"Wise,"</em> Sitar purrs. <em>"The container is loaded. Do not scan it. Do not open it. Precipice, dock nine, a man named Krell."</em> You don't trust him. You're going to do it anyway — your fuel gauge doesn't care about trust.</p>`,
+  choices:[{t:"Take on the cargo", goto:"p6"}]},
+
+p4:{eye:"Contract Sealed", title:"The Affiliation's Trust",
+  text:`<p>You shake Verron's hand. <span class="cyan">Twenty-five bars promised</span>, and something rarer — her word.</p>
+  <p><em>"I won't insult you with a lie,"</em> she says. <em>"The container is not cargo. It's a person. That's all I'll say on Haven, where the walls have Orion ears. Get them to Precipice alive."</em></p>
+  <p>A person. In a cryo-container. In the Triangle. You've carried stranger things — not many.</p>`,
+  choices:[{t:"Take on the cargo", goto:"p6"}]},
+
+p5:{eye:"Careful Play", title:"What the Dockmaster Knew",
+  text:`<p>You buy the dockmaster two drinks and learn the container was loaded under an Orion cargo code — but by an <em>Affiliation</em> crew. Someone is laundering this shipment through a faction that isn't really running it.</p>
+  <p>You pocket Grey's transponder and take the Orion contract as cover. You now know more than a good courier should.</p>`,
+  choices:[{t:"Take on the cargo", goto:"p6"}]},
+
+p6:{eye:"Underway", title:"Cargo Aboard",
+  text:`<p>The container rides in your hold: a matte-black cryo-cylinder, frost weeping from its seams, a Romulan-script maintenance plate ground off but not quite erased. Your engineer, <span class="cyan">Bex</span>, notices and says nothing — which is why you keep her.</p>
+  <p>You lift off Haven at dusk. For six hours, the Triangle is quiet. Then it isn't.</p>`,
+  choices:[{t:"Answer the sensor alarm", goto:"p7"}]},
+
+p7:{eye:"Contact · Bearing 214", title:"Interdiction",
+  text:`<p><em>"Klingon signature — but not fleet,"</em> Bex calls. <em>"It's flying Imperial Klingon States colors."</em> A <b>D-10 cruiser</b> slides out of the dark and locks a tractor beam on your hull.</p>
+  <p><em>"Free trader. You carry stolen Imperial property. Cut engines and prepare to be boarded, or be scattered across this system as a warning."</em></p>`,
+  choices:[
+    {t:"Comply — cut engines, let them board", goto:"p8"},
+    {t:"Bluff — talk your way clear",
+      check:{tag:"deception", attrs:["CHA"], vulcanINT:true, tn:13,
+        onWin:"p15", onLose:"p8", loseEffect:s=>{s.stand.k-=1}}},
+    {t:"Run — dive for the Cyclopus nebula",
+      check:{tag:"pilot", attrs:["DEX"], tn:12,
+        onWin:"p10win", onLose:"p10lose"}},
+    {t:"Fight — two disruptors and a bad attitude", combat:true, goto:"combat_d10"}
+  ]},
+
+p8:{eye:"Boarders", title:"The Boarding",
+  text:`<p>Mag-boots clang through your airlock. The party is led by <span class="rust">Korrd sutai-Ktarra</span>, kinsman to a Thought Admiral, who scans the cylinder and reads a life sign: <em>cryogenic stasis. Romulan.</em></p>
+  <p>His eyes light with terrible glee. <em>"A Romulan, smuggled through my space in a box. You've brought me a gift and a hostage in one crate."</em></p>`,
+  choices:[
+    {t:"Give up the container — save the ship, damn whoever's inside",
+      effect:s=>{s.stand.k+=1; s.stand.o-=2; s.tokens.verronWord=false}, goto:"p12"},
+    {t:"Lie — insist it's a watched Affiliation transfer he'll regret seizing",
+      check:{tag:"logic", attrs:["INT","CHA"], vulcanINT:true, klingonVs:true, tn:15,
+        onWin:"p13", onLose:"p12"}},
+    {t:"Invoke the Orion syndicate — they'll ransom it for more than plunder",
+      cond:s=>s.tokens.orionDebt, lockMsg:"Requires: Orion Debt",
+      tag:"trade", goto:"p14"}
+  ]},
+
+p10win:{eye:"Cyclopus Nebula", title:"Lost in the Soup",
+  text:`<p>You thread ion pockets by feel and prayer. <span class="cyan">Clean flying</span> — you burn barely three bars of coils and lose the D-10 in the murk. Korrd will remember the trader who ran.</p>`,
+  effect:s=>{s.latinum-=3; s.stand.k-=1},
+  choices:[{t:"Limp out the far side", goto:"p16"}]},
+
+p10lose:{eye:"Cyclopus Nebula", title:"A Rough Passage",
+  text:`<p>You make it into the gas and dust, but an ion pocket catches you broadside. You lose them — barely — trailing coolant and scorched plating. <span class="rust">Seven bars</span> gone, hull scarred, and Korrd's contempt logged.</p>`,
+  effect:s=>{s.latinum-=7; s.hull=Math.max(6,s.hull-6); s.stand.k-=1},
+  choices:[{t:"Limp out the far side", goto:"p16"}]},
+
+p13:{eye:"Standoff", title:"The Cold Lie",
+  text:`<p>You meet his glee with ice. <em>"Take the box, Commander. And take the consequences to your Thought Admiral yourself, when the watchers blame the Imperial States for the incident."</em></p>
+  <p>He studies you, then laughs — ugly, appreciative, real. <em>"You lie like a Klingon, trader."</em> He withdraws his men. <em>"When next we meet, it will be as friends or as a fair fight. Either pleases me."</em></p>
+  <p class="cyan">You have earned Korrd's favor.</p>`,
+  effect:s=>{s.tokens.kfavor=true; s.stand.k+=2},
+  choices:[{t:"Resume course for Precipice", goto:"p16"}]},
+
+p14:{eye:"Ledger Deal", title:"The Orion Gambit",
+  text:`<p>You tell Korrd the truth as leverage: the Frontier Mercantile Association will ransom this cargo for a fortune. Greedy, and knowing the Orions pay, he takes a cut instead of the crate — <span class="rust">five bars</span> from your fee to sweeten it — and logs the matter as Orion business he chose not to fight.</p>`,
+  effect:s=>{s.latinum-=5; s.stand.k+=1; s.stand.o+=1; s.tokens.orionDebt=false},
+  choices:[{t:"Resume course for Precipice", goto:"p16"}]},
+
+p15:{eye:"Channel Open", title:"The Plague That Saved You",
+  text:`<p>You sell it hard: a sealed plague case bound for the Precipice quarantine station, and a promise to log that House Ktarra exposed its warriors to Rigelian fever for one sick civilian.</p>
+  <p>Three seconds of silence. Then: <em>"Fly on, trader. The Imperial Klingon States sends its regards."</em> The tractor releases. Your crew does not believe their luck.</p>`,
+  effect:s=>{s.stand.k+=1},
+  choices:[{t:"Resume course for Precipice", goto:"p16"}]},
+
+p12:{eye:"Empty Clamps", title:"What You Gave Away",
+  text:`<p>Korrd's men haul the cylinder aboard the D-10. For one moment the frosted port clears and you see a face — a <span class="rust">Romulan woman</span>, young, in stasis, wholly at the mercy of a Klingon warlord. Then the airlock cycles and the cruiser warps off with its prize.</p>
+  <p>You are alive. You are paid nothing. You make Precipice with an empty hold and a full conscience-debt.</p>`,
+  choices:[{t:"Arrive at Precipice", goto:"p28"}]},
+
+p16:{eye:"Deck Two · Cargo Hold", title:"The Face in the Frost",
+  text:`<p>One thing is now certain: there is a <em>person</em> in your hold. Bex stands at the cylinder with a hard expression.</p>
+  <p><em>"Cap, the stasis timer's failing — that tractor cracked a seam. She's got maybe a day before the field collapses and she wakes mid-warp, or worse. I can stabilize her. But only if I open the box."</em></p>`,
+  choices:[
+    {t:"Open the container — save the life inside, contract be damned",
+      effect:s=>{s.tokens.stal=true}, goto:"p18"},
+    {t:"Leave it sealed — race for Precipice and pray the timer holds",
+      effect:s=>{s.tokens.blind=true}, goto:"p19"},
+    {t:"Signal Grey now — ask what's really in your hold",
+      cond:s=>s.tokens.sfi, lockMsg:"Requires: SFI Transponder",
+      effect:s=>{s.stand.f+=1; s.tokens.stal=true}, goto:"p20"}
+  ]},
+
+p18:{eye:"Stasis Breach", title:"Subcommander S'Tal",
+  text:`<p>Frost billows. A <span class="rust">Romulan woman</span> in a uniform stripped of insignia gasps awake and nearly breaks Bex's arm on pure reflex — then the fight leaves her.</p>
+  <p>She is <em>Subcommander S'Tal</em>, once of the warbird <em>Nel Gathi</em>, defecting with a data-core sewn into her lining: patrol schedules and sensor-net keys for the whole Romulan Neutral Zone — and the flaw in the newest cloaking device.</p>
+  <p><em>"Every power in the Triangle wants what I carry. The Affiliation alone offered me passage without a price. I did not expect a free trader to be the one holding my life."</em></p>`,
+  choices:[{t:"Sit with her a while", goto:"p21"}]},
+
+p19:{eye:"Sealed · Timer Amber", title:"The Sealed Gamble",
+  text:`<p>You push the <em>Gambit</em> to a speed your engines file a formal complaint about. The timer holds — barely. But you arrive at Precipice knowing nothing about what you carry, and no idea who's telling the truth.</p>`,
+  choices:[{t:"Make for Precipice", goto:"p22"}]},
+
+p20:{eye:"Encrypted Burst", title:"Grey Answers",
+  text:`<p><em>"The cargo is a Romulan defector — Subcommander S'Tal — carrying intelligence that could stop a war or start one,"</em> Grey's voice crackles. <em>"Do not hand her to the Orions; they'll sell her to the Romulans by breakfast. Deliver as contracted to draw out the buyer, then signal us. Eight bars in it for you, and the gratitude of people who remember."</em></p>
+  <p>You open the container knowing the truth, and greet her by name and rank. It disarms her.</p>`,
+  choices:[{t:"Sit with her a while", goto:"p21"}]},
+
+p21:{eye:"Galley · Third Watch", title:"The Conversation in the Dark",
+  text:`<p>S'Tal drinks Bex's terrible coffee like ambrosia and talks, though she doesn't have to. The Praetor's circle sold out her flotilla; she watched friends erased from the record; she chose the Triangle to defect <em>because</em> it belongs to no one.</p>
+  <p><em>"Your Affiliation understands this. Baker's World, and the worlds that signed there — they refused to be owned. It is the only philosophy in this quadrant worth the risk of dying for."</em> She looks at you directly. <em>"You could sell me, Captain. I would understand it. But I would rather you didn't."</em></p>
+  <p class="dim" id="kinline"></p>`,
+  onEnter:s=>{ if(s.romulanKin){ NODES.p21._kin=`<p class="cyan">Romulan to Romulan, she reads something in you she trusts. Her guard drops entirely.</p>`; } },
+  choices:[{t:"Make for Precipice", goto:"p22"}]},
+
+p22:{eye:"Free Port · The Edge of the Triangle", title:"Precipice",
+  text:`<p><b>Precipice</b> hangs at the ragged edge of the Triangle — gantries and greed, ships of a dozen powers docked hull-to-hull, all pretending not to see each other. Dock nine waits, and a man named <span class="amber">Krell</span> waits with it. He is not alone.</p>
+  <p>Bex reads the traffic: Krell and a squad of Orion enforcers at dock nine. A Romulan "trade attaché," arrived this morning, asking about a cryo-shipment. And a tight-beam from Della Verron, planetside: <em>"I'm here. The Affiliation can shelter your passenger. Come to me before you open those doors."</em></p>
+  <p>Everyone is here. Everyone knows. Now it comes down to what <em>you</em> do with the life in your hold.</p>`,
+  choices:[
+    {t:"Deliver to Krell as contracted — take the pay, ask nothing",
+      effect:s=>{s.latinum+=s.pay}, ending:"THE WAGE", goto:"end_wage"},
+    {t:"Sell S'Tal to the Romulan attaché — a fortune for a defector",
+      effect:s=>{s.latinum+=50; s.stand.r+=2; s.stand.o-=1; s.tokens.stal=false; s.tokens.verronWord=false},
+      ending:"THIRTY BARS", goto:"end_thirty"},
+    {t:"Signal Grey — let Star Fleet extract her quietly",
+      cond:s=>s.tokens.sfi, lockMsg:"Requires: SFI Transponder",
+      effect:s=>{s.latinum+=8; s.stand.f+=2; s.stand.o-=2; s.tokens.sfiOwed=true},
+      ending:"THE QUIET PEACE", goto:"end_quiet"},
+    {t:"Get her to Verron and the Affiliation's protection",
+      cond:s=>s.tokens.stal, lockMsg:"Requires: S'Tal's Trust (you must have opened the box)",
+      effect:s=>{s.latinum+=35; s.tokens.freeworlds=true},
+      ending:"THE FREE ROAD", goto:"end_free"},
+    {t:"Call Korrd — hand the warlord a legend instead of a payday",
+      cond:s=>s.tokens.kfavor, lockMsg:"Requires: Klingon Favor",
+      effect:s=>{s.latinum+=20; s.stand.r-=2; s.stand.o-=2; s.stand.k+=3},
+      ending:"THE WARLORD'S SONG", goto:"end_warlord"}
+  ]},
+
+p28:{eye:"Dock Nine · No Cargo", title:"The Empty Hold",
+  text:`<p>Krell is waiting, and when he learns the container is on a Klingon warship instead of his manifest, his professional calm curdles.</p>
+  <p><em>"The Association fronted for this shipment. You lost it to a Klingon. That's not a delivery problem, trader. That's a <b>debt</b> problem."</em></p>`,
+  choices:[
+    {t:"Buy your way clear — pay 10 bars and limp away marked",
+      cond:s=>s.latinum>=10, lockMsg:"Requires: 10 bars",
+      effect:s=>{s.latinum-=10}, ending:"THE MARKED TRADER", goto:"end_marked"},
+    {t:"You can't pay — let them take what's left",
+      cond:s=>s.latinum<10, lockMsg:"Only if under 10 bars",
+      ending:"GROUNDED", goto:"end_grounded"}
+  ]},
+
+/* ---------- ENDINGS ---------- */
+end_wage:{ending:"THE WAGE", eye:"Ending 1 of 6", title:"The Honest Courier's Wage",
+  text:`<p>Krell's enforcers take the container — and, if she was awake, S'Tal in binders, her eyes finding yours for one unbearable second before the hood goes on. Krell counts out your bars in full. The Orions are honest about debts.</p>
+  <p>Three weeks later you hear a Romulan defector was sold at a private auction on Eternity, to a buyer flying Praetor's colors. You try not to think about it. You mostly succeed.</p>
+  <p class="dim">You survived the Triangle with your hull and your latinum intact, and left a piece of yourself in a cryo-container on dock nine. Not every honest trade is a clean one.</p>`},
+end_thirty:{ending:"THIRTY BARS", eye:"Ending 2 of 6", title:"Thirty Bars of Silver",
+  text:`<p>The exchange is quick, professional, cold. They pay obscenely well. S'Tal does not struggle — she only looks at you with an expression you'll spend years trying to forget. Not hatred. <em>Disappointment.</em></p>
+  <p>Doors open for you in Romulan space that open for few outsiders. Bex requests a transfer at the next port and does not say why. She doesn't have to.</p>
+  <p class="dim">You won the Triangle's oldest game and lost the only crew that ever trusted you. The empire pays well for the pieces of your conscience.</p>`},
+end_quiet:{ending:"THE QUIET PEACE", eye:"Ending 3 of 6", title:"The Quiet Extraction",
+  text:`<p>You speak the word. A "customs cutter" that is not a customs cutter slides into dock eight; gray-suited people move through the crowd; and S'Tal is gone — folded into Star Fleet Intelligence before Krell understands the container is empty.</p>
+  <p>Her intelligence quietly rewrites the Neutral Zone patrols and makes the next cloaking generation obsolete before it launches. A small, secret peace. No one will ever know your name for it.</p>
+  <p class="dim">You handed history to the people who'll bury it in a vault, and never bragged. Some good deeds are classified.</p>`},
+end_free:{ending:"THE FREE ROAD", eye:"Ending 4 of 6 · the true ending", title:"The Free Road",
+  text:`<p>You slip S'Tal off through a maintenance gantry while Krell hammers at a sealed door and an empty box. Verron meets you below with a disbelieving smile. <em>"You could have sold her ten times over. You didn't. The Affiliation doesn't forget that."</em></p>
+  <p>S'Tal takes your hand the human way — awkwardly, deliberately learned. <em>"Baker's World. I'll see it after all, because a trader who owed me nothing chose a course no empire would allow."</em></p>
+  <p class="cyan">Every Affiliation port is open to you now, forever.</p>
+  <p class="dim">The rarest outcome in the Triangle, and the hardest to reach. You proved that even out here, between four empires' teeth, a person can choose to belong to no one but themselves — and help another do the same.</p>`},
+end_warlord:{ending:"THE WARLORD'S SONG", eye:"Ending 5 of 6", title:"The Warlord's Bargain",
+  text:`<p>You call Korrd and offer him something better than plunder: <em>glory.</em> The Imperial Klingon States, granting honorable asylum to a defector who spat on the Praetor — and humiliating two empires in a single stroke.</p>
+  <p>He arrives like a thunderclap. The Orions scatter; the Romulan attaché finds himself staring down a disruptor and a grin. S'Tal is offered a warrior's guest-right among the free houses. <em>"You defied a corrupt throne. We understand this better than most."</em></p>
+  <p class="dim">You didn't save the peace or pocket a fortune. You made a legend — and now you're in it. Qapla', trader.</p>`},
+end_marked:{ending:"THE MARKED TRADER", eye:"Ending 6 of 6", title:"The Marked Trader",
+  text:`<p>You pay the ten bars and limp away, marked but breathing.</p>
+  <p class="dim">You kept your ship. The Triangle kept its lesson: out here, the only unforgivable sin is losing someone else's cargo.</p>`},
+end_grounded:{ending:"GROUNDED", eye:"A hard end", title:"Impound",
+  text:`<p>The Association doesn't kill you — that would be wasteful. They take the <em>Verity's Gambit</em> in lieu of the debt and leave you on the gantries with your kit bag and a lesson.</p>
+  <p>Bex claps your shoulder. <em>"We'll fly again, Cap. Better to be captain of an empty ship than a resident of a full graveyard."</em> You watch your ship warp off under someone else's flag, and you start, already, to plan the next run.</p>
+  <p class="dim">You lost the Gambit, but not your crew, and not your future. In the Triangle, that counts as survival.</p>`}
+};
+
+/* combat handled specially */
+const D10 = {name:"IKS D-10 Cruiser \u201CDevastator\u201D", hull:60, atkMin:4, atkMax:9};
+
+/* ============================ STATE ============================ */
+let S = null;
+function newState(){ return {
+  captain:"", ship:"Verity's Gambit", race:null,
+  attrs:{STR:8,END:8,INT:8,DEX:8,CHA:8,LUC:8},
+  latinum:20, stand:{k:0,f:0,r:0,o:0}, tokens:{},
+  hull:20, maxHull:20, pay:0, contract:null,
+  freeReroll:false, romulanKin:false, node:"p1", combat:null,
+  psi:null, imported:false
+};}
+
+/* ============================ HELPERS ============================ */
+const $=s=>document.querySelector(s);
+const app=()=>$("#app");
+function d(sides){return Math.floor(Math.random()*sides)+1;}
+function rollAttrDice(){return d(6)+d(6)+3;} // 5..15
+function clampStand(v){return Math.max(-3,Math.min(3,v));}
+
+function traitBonus(s,tag,attrUsed){
+  let b=0; const R=s.race;
+  if(R==="Vulcan" && (attrUsed==="INT"||tag==="logic")) b+=3;
+  if(R==="Andorian" && (tag==="combat")) b+=2;
+  if(R==="Tellarite" && (tag==="negotiate"||tag==="trade"||tag==="intimidate")) b+=3;
+  if(R==="Klingon" && tag==="intimidate") b+=3;
+  if(R==="Romulan" && (tag==="deception")) b+=2;
+  if(R==="Orion" && (tag==="trade"||tag==="negotiate")) b+=2;
+  if(R==="Caitian" && (attrUsed==="DEX"||tag==="pilot"||tag==="evade")) b+=2;
+  if(R==="Edoan" && (attrUsed==="INT"||tag==="tech"||tag==="logic")) b+=2;
+  return b;
+}
+
+/* ============================ RENDER: TITLE ============================ */
+function renderTitle(){
+  app().innerHTML=`
+  <div class="title-hero"><div class="frame">
+    <div class="eyebrow">FASA-era · Star Trek RPG · The Triangle</div>
+    <h1>The Precipice Run<span class="sub">A solo branching adventure for one captain<span class="blink"> ▊</span></span></h1>
+    <p class="dim" style="max-width:60ch;margin:14px auto 4px">You captain the free trader <span class="amber">Verity's Gambit</span> on the independent routes between four empires. Tonight, one sealed cryo-container will make you a fortune, a fugitive, or a legend. Roll your captain and fly.</p>
+  </div></div>
+  <div class="card">
+    <button class="btn" onclick="startCreate()">▸ New captain — roll one here</button>
+    <button class="btn" onclick="showImport()">▸ Import an officer from a Personnel File</button>
+    <button class="btn" onclick="showLoad()">▸ Resume from a save code</button>
+    <div id="loadbox"></div>
+  </div>
+  <div class="card"><h2>How it plays</h2>
+    <p class="dim">Create a captain of any of seven races, each with real mechanical edges. Choices at every turn shift your <span class="amber">latinum</span>, your <span class="cyan">standing</span> with four powers, and the <span class="cyan">tokens</span> you carry. When you gamble, the dice decide — live, on screen. A Klingon D-10 waits mid-run for anyone bold or foolish enough to fight. Six endings; some paths open only to those who earned them.</p>
+  </div>`;
+}
+function showLoad(){
+  $("#loadbox").innerHTML=`<div class="field"><label class="fl">Paste save code</label>
+   <input id="loadinp" type="text" placeholder="paste here…">
+   <button class="btn small" style="margin-top:8px" onclick="doLoad()">Load</button>
+   <span id="loaderr" class="rust mini"></span></div>`;
+}
+function doLoad(){
+  try{ const raw=atob($("#loadinp").value.trim()); S=JSON.parse(raw);
+    if(!S.node) throw 0; renderNode(); }
+  catch(e){ $("#loaderr").textContent=" — that code didn't scan. Check for a stray space."; }
+}
+
+/* ============================ IMPORT: PERSONNEL FILE ============================ */
+/* The companion character generator builds a FASA Star Fleet officer on the
+   percentile (1–100) scale with a 7th attribute, PSI. This reads that officer's
+   sheet — pasted as text — and translates it onto the Gambit's own scale so the
+   whole game engine (checks, combat, endings) runs unchanged. Reads the sheet
+   only; it never needs the generator file itself. */
+const KNOWN_SPECIES = ["Vulcan","Andorian","Caitian","Edoan","Tellarite",
+  "Klingon","Romulan","Orion","Human"]; // check compound names before "Human"
+let importDraft=null;
+
+// Percentile (≈40–99) → Gambit scale (≈5–15, matching a 2d6+3 roll).
+function convertPct(pct){ return Math.max(4, Math.min(17, Math.round((pct-40)/6)+6)); }
+
+function parseStatBlock(text){
+  if(!text || !text.trim()) return {ok:false, msg:"Paste your officer's sheet first."};
+  const T = text.replace(/\u00a0/g," "); // normalise non-breaking spaces
+  const attrs={}; const pct={}; const missing=[];
+  ["STR","END","INT","DEX","CHA","LUC","PSI"].forEach(a=>{
+    // first integer after the attribute label (the value, before any "roll …" breakdown)
+    const m = new RegExp(a+"\\s*[:\\-]?\\s*(\\d{1,3})","i").exec(T);
+    if(m){ pct[a]=parseInt(m[1],10); } else if(a!=="PSI"){ missing.push(a); }
+  });
+  if(missing.length) return {ok:false, msg:"Couldn't find "+missing.join(", ")+" in that text. Make sure the attribute lines are included."};
+  ["STR","END","INT","DEX","CHA","LUC"].forEach(a=>attrs[a]=convertPct(pct[a]));
+  let species=null;
+  for(const s of KNOWN_SPECIES){ if(new RegExp("\\b"+s+"\\b","i").test(T)){ species=s; break; } }
+  // best-effort name: a "Name:" line, else the first non-empty line that isn't a label
+  let name="";
+  const nm=/name\s*[:\-]\s*(.+)/i.exec(T);
+  if(nm){ name=nm[1].trim().split(/\s{2,}|\n/)[0].trim(); }
+  return {ok:true, attrs, pct, psi:(pct.PSI!=null?pct.PSI:null), species, name};
+}
+
+function showImport(){
+  app().innerHTML=`
+  <div class="card"><div class="eyebrow">Star Fleet Personnel File · Detached Duty</div>
+   <h1 style="font-size:22px">Import an Officer</h1>
+   <p class="dim mini" style="margin-top:6px">Roll a full officer in your companion character generator, then copy the finished sheet and paste it below. Your officer takes the helm of the <span class="amber">Verity's Gambit</span> on detached, independent duty — trained, ranked, and about to learn what the Triangle does to Star Fleet manners.</p>
+  </div>
+  <div class="card">
+    <div class="field"><label class="fl">Paste the personnel sheet</label>
+      <textarea id="impText" rows="7" style="width:100%;background:#0a121a;border:1px solid var(--edge);color:var(--ink);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px" placeholder="e.g.  Cdr. Sarik   Age 30 · Vulcan
+STR 78   END 62   INT 84   DEX 55   CHA 44   LUC 22   PSI 61 …"></textarea></div>
+    <button class="btn small" onclick="doParseImport()">Read stat block</button>
+    <span id="impErr" class="rust mini"></span>
+    <div id="impPreview"></div>
+  </div>
+  <div class="card"><button class="btn small" onclick="renderTitle()">‹ Back</button></div>`;
+}
+
+function doParseImport(){
+  const res=parseStatBlock($("#impText").value);
+  $("#impErr").textContent="";
+  if(!res.ok){ $("#impErr").textContent=" — "+res.msg; $("#impPreview").innerHTML=""; return; }
+  importDraft=res;
+  const known = res.species && RACE_TRAIT_NOTE(res.species);
+  const speciesLine = res.species
+    ? `${res.species}${known?` · ${known}`:` · no special trait mapped, plays as baseline`}`
+    : `not detected — will play as an unaffiliated spacer (no species trait)`;
+  const attrCells = ["STR","END","INT","DEX","CHA","LUC"].map(a=>
+    `<div class="attr"><div class="k">${a}</div><div class="v">${res.attrs[a]}</div>
+     <div class="mini dim" style="font-size:9px">${res.pct[a]}%</div></div>`).join("");
+  $("#impPreview").innerHTML=`
+    <div class="rule"></div>
+    <p class="mini"><span class="dim">Species:</span> <span class="amber">${speciesLine}</span></p>
+    <p class="mini dim">Attributes translated to the Gambit's scale (percentile shown beneath):</p>
+    <div class="attrs">${attrCells}${res.psi!=null?`<div class="attr"><div class="k">PSI</div><div class="v">—</div><div class="mini dim" style="font-size:9px">${res.psi}%</div></div>`:""}</div>
+    ${res.psi!=null?`<p class="mini dim">PSI ${res.psi}% is carried as a service record — the Triangle rarely tests it, so it doesn't drive checks here.</p>`:""}
+    <div class="field" style="margin-top:12px"><label class="fl">Captain's name</label>
+      <input id="impName" type="text" value="${esc(res.name||'')}" placeholder="name on the file"></div>
+    <div class="field"><label class="fl">Ship's name</label>
+      <input id="impShip" type="text" value="Verity's Gambit"></div>
+    <button class="btn" onclick="launchImported()">▸ Take the helm — launch the run</button>`;
+}
+
+// short human label of what trait an imported species gets in-game
+function RACE_TRAIT_NOTE(sp){
+  return ({
+    Human:"Adaptable (one free re-roll)", Vulcan:"Cold Logic (+3 Intellect)",
+    Andorian:"Martial (+2 combat)", Tellarite:"Argumentative (+3 negotiation)",
+    Caitian:"Feline Reflexes (+2 piloting/evade)", Edoan:"Meticulous (+2 tech/logic)",
+    Klingon:"Warrior's Honor", Romulan:"Guile", Orion:"Merchant Prince"
+  })[sp]||"";
+}
+
+function launchImported(){
+  const d=importDraft; if(!d) return;
+  S=newState();
+  S.imported=true;
+  S.race=d.species||"Spacer";
+  ["STR","END","INT","DEX","CHA","LUC"].forEach(a=>S.attrs[a]=d.attrs[a]);
+  S.psi=d.psi;
+  const nm=($("#impName")&&$("#impName").value.trim())||d.name||"Captain";
+  S.captain=nm;
+  const sh=($("#impShip")&&$("#impShip").value.trim());
+  if(sh) S.ship=sh;
+  // apply the same start hooks the in-game creator uses, where they exist
+  if(S.race==="Human") S.freeReroll=true;
+  if(S.race==="Romulan") S.romulanKin=true;
+  if(S.race==="Orion"){ S.stand.o+=1; S.latinum+=5; }
+  if(S.race==="Klingon") S.stand.k+=1;
+  S.node="p1"; renderNode();
+}
+
+/* ============================ RENDER: CREATOR ============================ */
+let draft=null;
+function startCreate(){ draft=newState(); renderCreate(); }
+function renderCreate(){
+  const raceCards=Object.entries(RACES).map(([name,r])=>{
+    const mods=Object.entries(r.mods).map(([k,v])=>`${k} ${v>0?'+':''}${v}`).join("  ");
+    const sel=draft.race===name?"sel":"";
+    return `<div class="race ${sel}" onclick="pickRace('${name}')">
+      <h3>${name}</h3><div class="mods">${mods}</div>
+      <div class="trait"><b class="amber" style="letter-spacing:.1em">${r.trait}.</b> ${r.desc}</div></div>`;
+  }).join("");
+  const rolled = draft._rolled;
+  app().innerHTML=`
+  <div class="card"><div class="eyebrow">Personnel File · New Commission</div>
+   <h1 style="font-size:22px">Roll Your Captain</h1></div>
+
+  <div class="card"><h2>1 · Species</h2>
+    <p class="dim mini" style="margin-bottom:10px">Your species sets attribute modifiers and a signature trait that changes what you can attempt.</p>
+    <div class="grid2">${raceCards}</div></div>
+
+  <div class="card"><h2>2 · Attributes</h2>
+   <p class="dim mini" style="margin-bottom:8px">Roll 2d6+3 per attribute, then species modifiers apply. You get two re-rolls of the full spread.</p>
+   <div class="rollrow" id="dicerow">${renderAttrBoxes()}</div>
+   <div style="margin-top:10px">
+     <button class="btn small" onclick="doRollAttrs()" ${draft.race?'':'disabled'}>${rolled?'Re-roll spread ('+draft._rerolls+' left)':'Roll attributes'}</button>
+     ${draft.race?'':'<span class="mini rust"> — pick a species first</span>'}
+   </div></div>
+
+  <div class="card"><h2>3 · Identity</h2>
+   <div class="field"><label class="fl">Captain's name</label>
+     <input id="capname" type="text" placeholder="e.g. Mira Sadovkhan" value="${draft.captain||''}" oninput="draft.captain=this.value"></div>
+   <div class="field"><label class="fl">Ship's name</label>
+     <input id="shipname" type="text" value="${draft.ship}" oninput="draft.ship=this.value"></div>
+   <button class="btn" onclick="beginRun()" ${(draft.race&&rolled)?'':'disabled'}>
+     ▸ Sign the commission — launch<br>
+     ${(draft.race&&rolled)?'':'<span class="lock">Choose a species and roll attributes first</span>'}</button>
+  </div>
+  <div class="card"><button class="btn small" onclick="renderTitle()">‹ Back</button></div>`;
+}
+function renderAttrBoxes(){
+  return ATTRS.map(a=>{
+    const base=draft._base?draft._base[a]:null;
+    const mod=draft.race?(RACES[draft.race].mods[a]||0):0;
+    const val=base!=null?base+mod:"—";
+    const modtxt=mod?`${mod>0?'+':''}${mod}`:"";
+    return `<div class="diebox"><span class="k2">${a}</span>${val}<span class="m">${modtxt}</span></div>`;
+  }).join("");
+}
+function pickRace(n){ draft.race=n; renderCreate(); }
+function doRollAttrs(){
+  if(draft._rolled && draft._rerolls<=0) return;
+  if(!draft._rolled){ draft._rerolls=2; } else { draft._rerolls--; }
+  draft._base={}; ATTRS.forEach(a=>draft._base[a]=rollAttrDice());
+  draft._rolled=true;
+  // animate
+  const row=$("#dicerow");
+  if(row){ row.querySelectorAll(".diebox").forEach(b=>b.classList.add("rolling"));
+    setTimeout(()=>renderCreate(),380); }
+  else renderCreate();
+}
+function beginRun(){
+  if(!draft.race||!draft._rolled) return;
+  S=draft;
+  ATTRS.forEach(a=>S.attrs[a]=S._base[a]+(RACES[S.race].mods[a]||0));
+  if(!S.captain.trim()) S.captain="Captain";
+  RACES[S.race].start(S);
+  delete S._base; delete S._rolled; delete S._rerolls;
+  S.node="p1";
+  renderNode();
+}
+
+/* ============================ RENDER: HUD ============================ */
+function standCell(key,label,cls){
+  const v=S.stand[key]; const pct=Math.abs(v)/3*50;
+  const dir=v>=0?"left:50%":`right:50%`;
+  const col=`var(--${cls})`;
+  return `<div class="stand"><div class="hud-lbl"><span>${label}</span><span style="color:${col}">${v>0?'+':''}${v}</span></div>
+   <div class="track"><span class="mid"></span>
+   <span class="fill" style="${v>=0?'left:50%':'left:'+(50-pct)+'%'};width:${pct}%;background:${col}"></span></div></div>`;
+}
+function renderHUD(){
+  const t=Object.keys(S.tokens).filter(k=>S.tokens[k]).map(k=>`<span class="tok">${TOK[k]}</span>`).join("")||'<span class="mini dim">none</span>';
+  const low=S.latinum<=5?'glow':'';
+  const attrs=ATTRS.map(a=>`<div class="attr"><div class="k">${a}</div><div class="v">${S.attrs[a]}</div></div>`).join("")
+    +(S.psi!=null?`<div class="attr" title="Psionic rating (flavor only)"><div class="k">PSI</div><div class="v">${S.psi}%</div></div>`:"");
+  const hullpct=Math.max(0,S.hull/S.maxHull*100);
+  return `<div class="hud">
+   <div class="hud-top">
+     <div class="hud-id"><b>${esc(S.captain)}</b> · ${S.race} · <span class="dim">${esc(S.ship)}</span></div>
+     <div class="lat"><span class="${low}">${S.latinum} BARS</span></div>
+   </div>
+   <div class="bars">
+     ${standCell('k','Klingon','k')}${standCell('f','Fed','f')}
+     ${standCell('r','Romulan','r')}${standCell('o','Orion','o')}
+   </div>
+   <div class="attrs">${attrs}</div>
+   ${S.hull<S.maxHull?`<div class="hull"><span class="mini dim">HULL</span><div class="track"><span class="fill2" style="width:${hullpct}%"></span></div><span class="mini">${S.hull}/${S.maxHull}</span></div>`:''}
+   <div class="toks">${t}</div>
+  </div>`;
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ============================ RENDER: NODE ============================ */
+function renderNode(){
+  // combat is not a NODES entry — resolve it first (covers mid-combat saves)
+  if(S.node==="combat_d10"){ return S.combat? renderCombat() : startCombat(); }
+  const n=NODES[S.node];
+  if(!n){app().innerHTML="<div class='card'>Lost in subspace (missing node: "+S.node+")</div>";return;}
+  if(n.onEnter) n.onEnter(S);
+
+  // ending?
+  if(n.ending){ return renderEnding(n); }
+
+  let extra = (S.node==="p21" && n._kin)? n._kin : "";
+  const choices=n.choices.map((c,i)=>renderChoice(c,i)).join("");
+  app().innerHTML=`${renderHUD()}
+   <div class="card story">
+     <div class="eyebrow">${n.eye||''}</div>
+     <h1 style="font-size:22px">${n.title}</h1>
+     <div class="rule"></div>
+     ${n.text}${extra}
+   </div>
+   <div class="card">${choices}</div>
+   ${saveBar()}`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderChoice(c,i){
+  const ok = c.cond? c.cond(S) : true;
+  let sub="";
+  if(c.check){ const a=c.check.attrs.join("/"); sub=`<span class="tag">check · ${a} vs ${c.check.tn}${c.check.vulcanINT&&S.race==='Vulcan'?' · Logic':''}</span>`; }
+  if(c.combat){ sub=`<span class="tag">⚠ ship combat — the D-10 outguns you badly</span>`; }
+  if(!ok && c.lockMsg){ sub=`<span class="lock">🔒 ${c.lockMsg}</span>`; }
+  return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${c.t}${sub}</button>`;
+}
+function choose(i){
+  const n=NODES[S.node]; const c=n.choices[i];
+  if(c.cond && !c.cond(S)) return;
+  if(c.check){ return runCheck(c); }
+  if(c.effect) c.effect(S);
+  clampAll();
+  if(c.combat){ S.node="combat_d10"; return startCombat(); }
+  if(c.ending){ S.node=c.goto; return renderNode(); }
+  S.node=c.goto; renderNode();
+}
+function clampAll(){ ["k","f","r","o"].forEach(k=>S.stand[k]=clampStand(S.stand[k])); if(S.latinum<0)S.latinum=0; }
+
+/* ============================ DICE CHECK ============================ */
+function runCheck(c){
+  const chk=c.check;
+  // choose best applicable attribute
+  let attrUsed=chk.attrs[0], best=-99;
+  chk.attrs.forEach(a=>{ if(S.attrs[a]>best){best=S.attrs[a];attrUsed=a;} });
+  if(chk.vulcanINT && S.race==="Vulcan" && S.attrs.INT>best){ best=S.attrs.INT; attrUsed="INT"; }
+  const tb=traitBonus(S,chk.tag,attrUsed);
+  const klBonus=(chk.klingonVs && S.race==="Klingon")?3:0;
+  // overlay
+  const ovl=document.createElement("div"); ovl.className="ovl"; ovl.id="ovl";
+  ovl.innerHTML=`<div class="ovl-card">
+     <div class="eyebrow">${(chk.tag||'skill').toUpperCase()} CHECK</div>
+     <div class="mini dim" style="margin:4px 0 10px">${ATTR_NAME[attrUsed]} ${best}${tb?` + trait ${tb}`:''}${klBonus?` + honor ${klBonus}`:''} + 1d10 vs ${chk.tn}</div>
+     <div class="d10 rolling" id="die">?</div>
+     <div id="cres"></div>
+   </div>`;
+  document.body.appendChild(ovl);
+  let ticks=0;
+  const iv=setInterval(()=>{ $("#die").textContent=d(10); if(++ticks>10){clearInterval(iv); settle();} },70);
+
+  function settle(){
+    const roll=d(10);
+    const total=best+tb+klBonus+roll;
+    const win=total>=chk.tn;
+    const die=$("#die"); die.classList.remove("rolling"); die.textContent=roll;
+    die.style.borderColor = win?"var(--good)":"var(--rust)";
+    die.style.color = win?"var(--good)":"var(--rust)";
+    let html=`<div class="verdict ${win?'win':'lose'}">${win?'SUCCESS':'FAILURE'}</div>
+      <div class="mathline">${best}${tb?`+${tb}`:''}${klBonus?`+${klBonus}`:''} + ${roll} = <b>${total}</b> vs ${chk.tn}</div>`;
+    // human free reroll on failure
+    if(!win && S.freeReroll){
+      html+=`<button class="btn small" style="margin-top:12px;border-left-color:var(--cyan)" onclick="freeReroll()">↻ Use Adaptable — one free re-roll</button>`;
+    }
+    html+=`<button class="btn small" style="margin-top:12px" onclick="resolveCheck(${win})">Continue</button>`;
+    $("#cres").innerHTML=html;
+    window._pendingCheck=c;
+  }
+}
+function freeReroll(){
+  S.freeReroll=false;
+  const c=window._pendingCheck;
+  document.getElementById("ovl").remove();
+  runCheck(c);
+}
+function resolveCheck(win){
+  const c=window._pendingCheck; const chk=c.check;
+  document.getElementById("ovl").remove();
+  if(win){ if(chk.winEffect)chk.winEffect(S); clampAll(); S.node=chk.onWin; }
+  else   { if(chk.loseEffect)chk.loseEffect(S); clampAll(); S.node=chk.onLose; }
+  renderNode();
+}
+
+/* ============================ COMBAT ============================ */
+function startCombat(){
+  S.combat={foeHull:D10.hull, round:1, log:["The D-10 fills your forward screen. This was, on reflection, a poor idea."]};
+  renderCombat();
+}
+function renderCombat(){
+  const cb=S.combat;
+  const foePct=cb.foeHull/D10.hull*100;
+  const hullPct=Math.max(0,S.hull/S.maxHull*100);
+  app().innerHTML=`${renderHUD()}
+   <div class="card story">
+     <div class="eyebrow">Combat · Round ${cb.round}</div>
+     <h1 style="font-size:20px">${D10.name}</h1>
+     <div class="combat-foe"><span class="mini dim">ENEMY HULL</span>
+       <div class="track" style="flex:1;height:10px"><span class="fill2" style="width:${foePct}%;background:linear-gradient(90deg,var(--k),var(--amber))"></span></div>
+       <span class="mini">${cb.foeHull}/${D10.hull}</span></div>
+     <div class="combat-foe"><span class="mini dim">YOUR HULL</span>
+       <div class="track" style="flex:1;height:10px"><span class="fill2" style="width:${hullPct}%"></span></div>
+       <span class="mini">${S.hull}/${S.maxHull}</span></div>
+     <div class="rule"></div>
+     <p class="dim">${cb.log[cb.log.length-1]}</p>
+   </div>
+   <div class="card">
+     <button class="btn" onclick="cbAct('fire')">Fire disruptors<span class="tag">DEX to hit · light damage</span></button>
+     <button class="btn" onclick="cbAct('evade')">Evasive maneuvers<span class="tag">DEX · blunt their next hit</span></button>
+     <button class="btn" onclick="cbAct('subsys')">Target the tractor emitter<span class="tag">INT vs 15 · break free and run</span></button>
+     <button class="btn" onclick="cbAct('surrender')">Cut engines and surrender<span class="tag">end the fight — you'll be boarded</span></button>
+   </div>${saveBar()}`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cbAct(kind){
+  const cb=S.combat; let evadeBonus=cb._evade?4:0; cb._evade=false;
+  const andor = S.race==="Andorian"?2:0;
+  if(kind==="surrender"){ S.stand.k=clampStand(S.stand.k-1); S.latinum=Math.max(0,S.latinum-4);
+    S.node="p8"; return renderNode(); }
+  if(kind==="subsys"){
+    return combatCheck("INT",15,andor,(win)=>{
+      if(win){ cb.log.push("A clean shot cripples their tractor array — you punch clear and dive for open space."); S.stand.k=clampStand(S.stand.k-1); S.node="p16"; renderNode(); }
+      else { cb.log.push("Your shot goes wide of the emitter. They answer."); enemyFire(); }
+    });
+  }
+  if(kind==="evade"){
+    return combatCheck("DEX",11,andor,(win)=>{
+      cb._evade = win;
+      cb.log.push(win?"You slew the Gambit through their firing solution — their next volley will bite less.":"The old freighter is too slow; the maneuver barely helps.");
+      enemyFire();
+    });
+  }
+  if(kind==="fire"){
+    return combatCheck("DEX",10,andor,(win)=>{
+      if(win){ const dmg=d(6)+3+andor; cb.foeHull=Math.max(0,cb.foeHull-dmg);
+        cb.log.push(`Direct hit — ${dmg} damage to the cruiser. Barely a scratch on that hull, but the crew cheers.`);
+        if(cb.foeHull<=0){ return combatVictory(); } }
+      else cb.log.push("Your volley splashes against their shields. Nothing.");
+      enemyFire();
+    });
+  }
+}
+function combatCheck(attr,tn,bonus,cb2){
+  const val=S.attrs[attr]+bonus;
+  const ovl=document.createElement("div"); ovl.className="ovl"; ovl.id="ovl";
+  ovl.innerHTML=`<div class="ovl-card"><div class="eyebrow">${attr} vs ${tn}</div>
+    <div class="d10 rolling" id="die">?</div><div id="cres" class="mini dim" style="margin-top:8px"></div></div>`;
+  document.body.appendChild(ovl);
+  let t=0; const iv=setInterval(()=>{$("#die").textContent=d(10); if(++t>8){clearInterval(iv);fin();}},70);
+  function fin(){ const roll=d(10); const total=val+roll; const win=total>=tn;
+    const die=$("#die"); die.classList.remove("rolling"); die.textContent=roll;
+    die.style.borderColor=win?"var(--good)":"var(--rust)"; die.style.color=win?"var(--good)":"var(--rust)";
+    $("#cres").innerHTML=`${val}+${roll}=${total} vs ${tn} — <b class="${win?'':'rust'}">${win?'hit':'miss'}</b>`;
+    setTimeout(()=>{ document.getElementById("ovl").remove(); cb2(win); },720);
+  }
+}
+function enemyFire(){
+  const cb=S.combat;
+  let dmg=D10.atkMin+Math.floor(Math.random()*(D10.atkMax-D10.atkMin+1));
+  if(cb._evade){ dmg=Math.max(1,dmg-4); }
+  S.hull=Math.max(0,S.hull-dmg);
+  cb.log.push(`The D-10 returns fire — ${dmg} damage. ${S.hull<=0?'':'Deck two is burning; Bex is on it.'}`);
+  cb.round++;
+  if(S.hull<=0){ return combatCrippled(); }
+  renderCombat();
+}
+function combatVictory(){
+  // essentially impossible, but honor it
+  app().innerHTML=`${renderHUD()}<div class="card story"><div class="eyebrow">Against All Odds</div>
+   <h1 style="font-size:20px">The Cruiser Breaks</h1><div class="rule"></div>
+   <p>It should not have happened. A freighter does not kill a D-10. But a torpedo finds their wounded core and the <em>Devastator</em> comes apart in silence. Your crew is too stunned to cheer. The songs, when they come, will not be believed.</p>
+   <p class="cyan">You proceed to Precipice with the container — and a legend no one will credit.</p></div>
+   <div class="card"><button class="btn" onclick="S.stand.k=Math.min(3,S.stand.k+2);S.node='p16';renderNode()">Resume course</button></div>${saveBar()}`;
+}
+function combatCrippled(){
+  app().innerHTML=`${renderHUD()}<div class="card story"><div class="eyebrow">Hull Breach · Drives Offline</div>
+   <h1 style="font-size:20px">The Gun That Loses</h1><div class="rule"></div>
+   <p>Your starboard nacelle is gutted; deck two is a furnace. The next Klingon shot will not miss. You have seconds to choose how this ends.</p></div>
+   <div class="card">
+     <button class="btn" onclick="crippledSurrender()">Surrender from your knees<span class="tag">boarded · Klingon −2 · costly repairs</span></button>
+     <button class="btn" onclick="crippledRam()">Blow the container out the aft hatch as a distraction and run<span class="tag">LUC · desperate, awful, clever</span></button>
+   </div>${saveBar()}`;
+}
+function crippledSurrender(){ S.stand.k=clampStand(S.stand.k-2); S.latinum=Math.max(0,S.latinum-6); S.node="p8"; renderNode(); }
+function crippledRam(){
+  combatCheck("LUC",11,0,(win)=>{
+    // either way the cargo is gone
+    S.tokens.stal=false;
+    if(win){ app().innerHTML=`${renderHUD()}<div class="card story"><div class="eyebrow">Full Reverse</div>
+      <h1 style="font-size:20px">Jettison</h1><div class="rule"></div>
+      <p>The cylinder tumbles into the dark. Their tractor lunges for it on instinct — and in that half-second you dump everything into a crash-warp and vanish. You live. The container does not stay yours.</p>
+      <p class="rust">You reach Precipice with an empty hold and a churning gut.</p></div>
+      <div class="card"><button class="btn" onclick="S.node='p28';renderNode()">Face Krell</button></div>${saveBar()}`;
+    } else {
+      app().innerHTML=`${renderHUD()}<div class="card story"><div class="eyebrow">Too Slow</div>
+      <h1 style="font-size:20px">Boarded Anyway</h1><div class="rule"></div>
+      <p>The hatch jams for one fatal instant. The Klingons ride your wake straight through the breach and take the ship's controls — and the container — before you clear the system.</p></div>
+      <div class="card"><button class="btn" onclick="S.stand.k=clampStand(S.stand.k+1);S.node='p28';renderNode()">Limp to Precipice</button></div>${saveBar()}`;
+    }
+  });
+}
+
+/* ============================ ENDING ============================ */
+function renderEnding(n){
+  const wealth = S.latinum;
+  app().innerHTML=`${renderHUD()}
+   <div class="card story" style="text-align:center">
+     <div class="ending-badge">${n.ending}</div>
+     <div class="eyebrow">${n.eye||''}</div>
+     <h1 style="font-size:24px">${n.title}</h1>
+   </div>
+   <div class="card story">${n.text}
+     <div class="rule"></div>
+     <p class="mini dim">Final tally · ${esc(S.captain)} of the ${esc(S.ship)} · ${S.race}<br>
+     ${wealth} bars · Klingon ${sgn(S.stand.k)} · Fed ${sgn(S.stand.f)} · Romulan ${sgn(S.stand.r)} · Orion ${sgn(S.stand.o)}</p>
+   </div>
+   <div class="card">
+     <button class="btn" onclick="startCreate()">▸ Fly it again — new captain</button>
+     <button class="btn" onclick="renderTitle()">▸ Return to title</button>
+     <p class="mini dim" style="margin-top:10px">Six endings exist. The Free Road is the hardest to reach — it asks you to open the box, and to want nothing for it.</p>
+   </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function sgn(v){return (v>0?'+':'')+v;}
+
+/* ============================ SAVE ============================ */
+function saveBar(){
+  return `<div class="card"><div class="eyebrow">Log</div>
+   <button class="btn small" onclick="genSave()">Save — get a code</button>
+   <button class="btn small" onclick="renderTitle()">Abandon run</button>
+   <div id="savebox"></div></div>`;
+}
+function genSave(){
+  const clean=JSON.parse(JSON.stringify(S));
+  const code=btoa(JSON.stringify(clean));
+  $("#savebox").innerHTML=`<p class="mini dim" style="margin:10px 0 6px">Copy this code. Paste it at the title screen to resume.</p>
+    <div class="save" id="savecode">${code}</div>
+    <button class="btn small" style="margin-top:8px" onclick="copySave()">Copy code</button>
+    <span id="copied" class="mini cyan"></span>`;
+}
+function copySave(){
+  const txt=$("#savecode").textContent;
+  navigator.clipboard?.writeText(txt).then(()=>{$("#copied").textContent=" copied ✓";},
+    ()=>{fallbackCopy(txt);});
+  if(!navigator.clipboard) fallbackCopy(txt);
+}
+function fallbackCopy(t){ const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);
+  ta.select();try{document.execCommand("copy");$("#copied").textContent=" copied ✓";}catch(e){}ta.remove(); }
+
+/* ============================ BOOT ============================ */
+renderTitle();
+</script>
