@@ -1,4 +1,4 @@
-<!-- THE PRECIPICE RUN — a playable solo RPG session Version .10 -->
+<!-- THE PRECIPICE RUN — a playable solo RPG session -->
 <!-- Original scenario for FASA-era Star Trek: The Role Playing Game. Single self-contained file; runs offline. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -121,10 +121,43 @@ input[type=text]:focus{outline:none;border-color:var(--amber)}
   padding:4px 14px;letter-spacing:.2em;font-family:"Arial Narrow",sans-serif;font-size:13px;margin-bottom:8px}
 .combat-foe{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 10px}
 .mini{font-size:11px;color:var(--dim);letter-spacing:.05em}
+
+/* ---- augment: portraits · dossier · sound ---- */
+.npc-art{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:2px 0 12px}
+.pcard{text-align:center}
+.pface{display:block;border:1px solid var(--edge);border-radius:10px;background:#0a121a}
+.pcard .cap{font-size:10px;letter-spacing:.05em;color:var(--dim);margin-top:4px;max-width:96px;line-height:1.3}
+.hud-id-wrap{display:flex;align-items:center;gap:9px}
+.hud-id-wrap .pface{border-radius:8px}
+.sndbtn{position:fixed;top:10px;right:12px;z-index:30;background:rgba(9,13,19,.9);border:1px solid var(--edge);
+  color:var(--amber);border-radius:9px;width:38px;height:34px;font-size:16px;cursor:pointer;line-height:1;padding:0}
+.sndbtn:hover{border-color:var(--cyan)}
+.reglink{font-size:10px;letter-spacing:.12em;color:var(--cyan);cursor:pointer;border:1px solid var(--edge);
+  border-radius:6px;padding:1px 8px;background:#0b1620;white-space:nowrap}
+.reglink:hover{border-color:var(--cyan)}
+.dossier .statblk{background:#0b131b;border:1px solid var(--edge);border-radius:11px;padding:14px 16px;margin:12px 0}
+.dossier .statblk h3{color:var(--amber);font-size:14px;letter-spacing:.14em;margin:0 0 2px}
+.dossier .cls{color:var(--cyan);font-size:11px;letter-spacing:.05em;margin-bottom:10px}
+.statgrid{display:grid;grid-template-columns:1fr;gap:0 22px;font-size:12px;margin-top:6px}
+@media(min-width:560px){.statgrid{grid-template-columns:1fr 1fr}}
+.statrow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dotted #1c2833;padding:4px 0}
+.statrow .l{color:var(--dim)} .statrow .v{color:var(--ink);text-align:right}
+.shipsil{display:block;margin:0 auto 8px}
+.combat-ships{display:flex;justify-content:space-around;align-items:center;gap:10px;margin:2px 0 10px}
+.facegrp{margin-top:14px;text-align:left}
+.facerow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:7px 0}
+.facelbl{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;font-family:"Arial Narrow","Helvetica Neue",Arial,sans-serif;flex:0 0 88px}
+.faceopts{display:flex;gap:6px;flex-wrap:wrap}
+.fbtn{cursor:pointer;background:#0e1620;color:var(--dim);border:1px solid var(--edge);border-radius:7px;
+  padding:5px 10px;font-size:11px;letter-spacing:.05em;font-family:inherit;transition:.12s}
+.fbtn:hover{border-color:var(--cyan);color:var(--ink)}
+.fbtn.on{border-color:var(--amber);color:var(--amber);background:#151f2b}
+.ver{color:var(--dim);font-size:10px;letter-spacing:.18em;font-family:"Arial Narrow",sans-serif}
 @media (prefers-reduced-motion: reduce){.rolling{animation:none}.blink{animation:none}}
 </style>
 
 <div class="scan"></div>
+<button id="sndbtn" class="sndbtn" onclick="toggleSound()" title="Sound on / off">🔊</button>
 <div class="wrap"><div id="app"></div>
 <div class="foot">The Precipice Run · an original scenario for FASA-era <span class="dim">Star Trek: The Role Playing Game</span><br>
 For personal tabletop use. Not affiliated with or endorsed by any rights holder.</div>
@@ -132,6 +165,7 @@ For personal tabletop use. Not affiliated with or endorsed by any rights holder.
 
 <script>
 /* ============================ DATA ============================ */
+const GAME_VERSION = "0.5";
 const ATTRS = ["STR","END","INT","DEX","CHA","LUC"];
 const ATTR_NAME = {STR:"Strength",END:"Endurance",INT:"Intellect",DEX:"Dexterity",CHA:"Presence",LUC:"Luck"};
 
@@ -184,25 +218,91 @@ p2:{eye:"Sundog Cantina", title:"Three Offers",
 p3:{eye:"Contract Sealed", title:"The Orion's Coin",
   text:`<p>You take Sitar's chit. <span class="amber">Thirty bars promised</span> on delivery. The Orions now feel that <em>you</em> owe <em>them</em> — which is how they prefer all relationships.</p>
   <p><em>"Wise,"</em> Sitar purrs. <em>"The container is loaded. Do not scan it. Do not open it. Precipice, dock nine, a man named Krell."</em> You don't trust him. You're going to do it anyway — your fuel gauge doesn't care about trust.</p>`,
-  choices:[{t:"Take on the cargo", goto:"p6"}]},
+  choices:[{t:"Take on the cargo", goto:"prep"}]},
 
 p4:{eye:"Contract Sealed", title:"The Affiliation's Trust",
   text:`<p>You shake Verron's hand. <span class="cyan">Twenty-five bars promised</span>, and something rarer — her word.</p>
   <p><em>"I won't insult you with a lie,"</em> she says. <em>"The container is not cargo. It's a person. That's all I'll say on Haven, where the walls have Orion ears. Get them to Precipice alive."</em></p>
   <p>A person. In a cryo-container. In the Triangle. You've carried stranger things — not many.</p>`,
-  choices:[{t:"Take on the cargo", goto:"p6"}]},
+  choices:[{t:"Take on the cargo", goto:"prep"}]},
 
 p5:{eye:"Careful Play", title:"What the Dockmaster Knew",
   text:`<p>You buy the dockmaster two drinks and learn the container was loaded under an Orion cargo code — but by an <em>Affiliation</em> crew. Someone is laundering this shipment through a faction that isn't really running it.</p>
   <p>You pocket Grey's transponder and take the Orion contract as cover. You now know more than a good courier should.</p>`,
-  choices:[{t:"Take on the cargo", goto:"p6"}]},
+  choices:[{t:"Take on the cargo", goto:"prep"}]},
 
 p6:{eye:"Underway", title:"Cargo Aboard",
   text:`<p>The container rides in your hold: a matte-black cryo-cylinder, frost weeping from its seams, a Romulan-script maintenance plate ground off but not quite erased. Your engineer, <span class="cyan">Bex</span>, notices and says nothing — which is why you keep her.</p>
   <p>You lift off Haven at dusk. For six hours, the Triangle is quiet. Then it isn't.</p>`,
-  choices:[{t:"Answer the sensor alarm", goto:"p7"}]},
+  choices:[{t:"Answer the sensor alarm", goto:"derelict"}]},
 
-p7:{eye:"Contact · Bearing 214", title:"Interdiction",
+prep:{eye:"Berth 7 \u00b7 Pre-Flight", title:"Before You Burn",
+  art:"bex",
+  onEnter:s=>{ NODES.prep.text =
+    `<p>The cylinder is clamped down and the berth clock is running. Bex runs the pre-flight while you tally the strongbox: <span class="amber">${s.latinum} bars</span> on hand. A wise captain spends a little now so the Triangle can't take everything later.</p>
+     <p class="dim mini">Prices are marked on each option. Do what you can afford \u2014 then lift.` +
+     (s.fueled?` <span class="cyan">Tanks topped.</span>`:``) +
+     (s.cleanManifest?` <span class="cyan">Manifest cleaned.</span>`:``) +
+     (s.disruptorTune?` <span class="cyan">Disruptors tuned (+2 dmg).</span>`:``) + `</p>`; },
+  text:`<p>The cylinder is clamped down and the berth clock is running.</p>`,
+  choices:[
+    {t:`Top off fuel and coolant<span class="tag">Cost: 4 bars \u00b7 softens your losses if you run the Cyclopus nebula</span>`,
+      cond:s=>s.latinum>=4 && !s.fueled, lockMsg:"Requires: 4 bars (or already done)",
+      effect:s=>{s.latinum-=4; s.fueled=true}, goto:"prep"},
+    {t:`Have Bex tune the disruptors for a fight<span class="tag">No bars \u2014 a skill check; success gives +2 disruptor damage in combat</span>`,
+      cond:s=>!s._tuned, lockMsg:"Already attempted",
+      check:{tag:"tech", attrs:["INT","DEX"], tn:11, onWin:"prep", onLose:"prep",
+        winEffect:s=>{s.disruptorTune=2; s._tuned=true}, loseEffect:s=>{s._tuned=true}}},
+    {t:`Slip the dockmaster a few bars for a clean manifest<span class="tag">Cost: 3 bars \u00b7 eases the customs inspection at Precipice</span>`,
+      cond:s=>s.latinum>=3 && !s.cleanManifest, lockMsg:"Requires: 3 bars (or already done)",
+      effect:s=>{s.latinum-=3; s.cleanManifest=true}, goto:"prep"},
+    {t:`Enough. Lift off \u2014 the sooner gone, the sooner paid<span class="tag">No cost</span>`, goto:"p6"}
+  ]},
+
+derelict:{eye:"Drift \u00b7 Bearing 090", title:"The Silent Skiff",
+  art:"sitar",
+  text:`<p>Six hours out, Bex flags a contact: a powered-down Orion skiff tumbling slow, running lights dead, a thread of a distress ping on a smuggler's band. Could be honest salvage. Could be a hook with a crew behind it. The Triangle runs on both.</p>`,
+  choices:[
+    {t:"Match velocity and board her \u2014 take what salvage you can",
+      check:{tag:"tech", attrs:["INT"], tn:12, onWin:"derelict_salv", onLose:"derelict_trap"}},
+    {t:"Strip her sensor logs from a safe distance \u2014 slower, careful",
+      check:{tag:"tech", attrs:["INT","DEX"], tn:14, onWin:"derelict_salv", onLose:"p7",
+        winEffect:s=>{s.latinum+=3}}},
+    {t:"Leave it. You're hauling something worth more than scrap", goto:"p7"}
+  ]},
+derelict_salv:{eye:"Salvage", title:"A Clean Take",
+  text:`<p>The skiff's crew is long gone \u2014 decompression, weeks ago. You pull intact coil-stock and a crate of unbonded latinum someone died hiding. <span class="amber">Eight bars</span> richer, and a spare coupling Bex tucks away with a grin. Your tanks are topped from theirs, too.</p>`,
+  effect:s=>{s.latinum+=8; s.fueled=true},
+  choices:[{t:"Cast off and resume course", goto:"p7"}]},
+derelict_trap:{eye:"Ambush", title:"The Hook Had a Line",
+  text:`<p>The instant your grapple bites, a proximity charge cooks off against your dorsal plating and a raider ghost lights its engines a system away \u2014 logging your transponder for later. <span class="rust">Four bars</span> of damage and a mark on your name in Orion waters.</p>`,
+  effect:s=>{s.latinum=Math.max(0,s.latinum-4); s.hull=Math.max(6,s.hull-4); s.stand.o=clampStand(s.stand.o-1)},
+  choices:[{t:"Break off and run for open space", goto:"p7"}]},
+
+approach:{eye:"Approach Control \u00b7 Precipice", title:"Customs on the Edge",
+  text:`<p>Precipice approach hails you before you can make dock nine: an Orion Mercantile inspection cutter, wanting aboard for a "routine" look. Routine is fine for a clean hold. Yours is a great many things, but clean is not one of them.</p>`,
+  choices:[
+    {t:"Present the pre-cleared manifest \u2014 nothing to see",
+      cond:s=>s.cleanManifest, lockMsg:"Requires: clean manifest (arranged on Haven)",
+      effect:s=>{s.stand.o=clampStand(s.stand.o+1)}, goto:"p22"},
+    {t:"Talk your way past the inspector",
+      check:{tag:"negotiate", attrs:["CHA"], tn:13, onWin:"p22", onLose:"approach_fined"}},
+    {t:"Grease the cutter's captain \u2014 5 bars, no questions",
+      cond:s=>s.latinum>=5, lockMsg:"Requires: 5 bars",
+      effect:s=>{s.latinum-=5}, goto:"p22"},
+    {t:"Don't stop \u2014 burn for the dock and lose them in traffic",
+      check:{tag:"pilot", attrs:["DEX"], tn:14, onWin:"p22", onLose:"approach_burn"}}
+  ]},
+approach_fined:{eye:"Detained", title:"A Fine and a Frown",
+  text:`<p>The inspector doesn't buy it. He can't prove what's in your hold, but he can invent enough paperwork to sting: <span class="rust">four bars</span> in "docking irregularities," and a longer look next time.</p>`,
+  effect:s=>{s.latinum=Math.max(0,s.latinum-4); s.stand.o=clampStand(s.stand.o-1)},
+  choices:[{t:"Pay it and dock", goto:"p22"}]},
+approach_burn:{eye:"Reckless Approach", title:"Scraped In",
+  text:`<p>You thread the traffic lanes at a speed that violates nine ordinances and clip a mooring buoy doing it. You reach dock nine \u2014 but the Association logs the stunt, and repairs aren't free. <span class="rust">Five bars</span> and a fresh hull scar.</p>`,
+  effect:s=>{s.latinum=Math.max(0,s.latinum-5); s.hull=Math.max(6,s.hull-3); s.stand.o=clampStand(s.stand.o-1)},
+  choices:[{t:"Ease into dock nine", goto:"p22"}]},
+
+p7:{eye:"Contact \u00b7 Bearing 214", title:"Interdiction",
   text:`<p><em>"Klingon signature — but not fleet,"</em> Bex calls. <em>"It's flying Imperial Klingon States colors."</em> A <b>D-10 cruiser</b> slides out of the dark and locks a tractor beam on your hull.</p>
   <p><em>"Free trader. You carry stolen Imperial property. Cut engines and prepare to be boarded, or be scattered across this system as a warning."</em></p>`,
   choices:[
@@ -232,12 +332,12 @@ p8:{eye:"Boarders", title:"The Boarding",
 
 p10win:{eye:"Cyclopus Nebula", title:"Lost in the Soup",
   text:`<p>You thread ion pockets by feel and prayer. <span class="cyan">Clean flying</span> — you burn barely three bars of coils and lose the D-10 in the murk. Korrd will remember the trader who ran.</p>`,
-  effect:s=>{s.latinum-=3; s.stand.k-=1},
+  effect:s=>{s.latinum-=(s.fueled?1:3); s.stand.k-=1},
   choices:[{t:"Limp out the far side", goto:"p16"}]},
 
 p10lose:{eye:"Cyclopus Nebula", title:"A Rough Passage",
   text:`<p>You make it into the gas and dust, but an ion pocket catches you broadside. You lose them — barely — trailing coolant and scorched plating. <span class="rust">Seven bars</span> gone, hull scarred, and Korrd's contempt logged.</p>`,
-  effect:s=>{s.latinum-=7; s.hull=Math.max(6,s.hull-6); s.stand.k-=1},
+  effect:s=>{s.latinum-=(s.fueled?4:7); s.hull=Math.max(6,s.hull-(s.fueled?3:6)); s.stand.k-=1},
   choices:[{t:"Limp out the far side", goto:"p16"}]},
 
 p13:{eye:"Standoff", title:"The Cold Lie",
@@ -284,7 +384,7 @@ p18:{eye:"Stasis Breach", title:"Subcommander S'Tal",
 
 p19:{eye:"Sealed · Timer Amber", title:"The Sealed Gamble",
   text:`<p>You push the <em>Gambit</em> to a speed your engines file a formal complaint about. The timer holds — barely. But you arrive at Precipice knowing nothing about what you carry, and no idea who's telling the truth.</p>`,
-  choices:[{t:"Make for Precipice", goto:"p22"}]},
+  choices:[{t:"Make for Precipice", goto:"approach"}]},
 
 p20:{eye:"Encrypted Burst", title:"Grey Answers",
   text:`<p><em>"The cargo is a Romulan defector — Subcommander S'Tal — carrying intelligence that could stop a war or start one,"</em> Grey's voice crackles. <em>"Do not hand her to the Orions; they'll sell her to the Romulans by breakfast. Deliver as contracted to draw out the buyer, then signal us. Eight bars in it for you, and the gratitude of people who remember."</em></p>
@@ -296,7 +396,7 @@ p21:{eye:"Galley · Third Watch", title:"The Conversation in the Dark",
   <p><em>"Your Affiliation understands this. Baker's World, and the worlds that signed there — they refused to be owned. It is the only philosophy in this quadrant worth the risk of dying for."</em> She looks at you directly. <em>"You could sell me, Captain. I would understand it. But I would rather you didn't."</em></p>
   <p class="dim" id="kinline"></p>`,
   onEnter:s=>{ if(s.romulanKin){ NODES.p21._kin=`<p class="cyan">Romulan to Romulan, she reads something in you she trusts. Her guard drops entirely.</p>`; } },
-  choices:[{t:"Make for Precipice", goto:"p22"}]},
+  choices:[{t:"Make for Precipice", goto:"approach"}]},
 
 p22:{eye:"Free Port · The Edge of the Triangle", title:"Precipice",
   text:`<p><b>Precipice</b> hangs at the ragged edge of the Triangle — gantries and greed, ships of a dozen powers docked hull-to-hull, all pretending not to see each other. Dock nine waits, and a man named <span class="amber">Krell</span> waits with it. He is not alone.</p>
@@ -367,6 +467,9 @@ end_grounded:{ending:"GROUNDED", eye:"A hard end", title:"Impound",
 
 /* combat handled specially */
 const D10 = {name:"IKS D-10 Cruiser \u201CDevastator\u201D", hull:60, atkMin:4, atkMax:9};
+;(function(){ const A={p2:["sitar","verron","grey"], p6:"bex", p7:"d10", p8:"korrd", p12:"korrd",
+  p13:"korrd", p14:"korrd", p16:"bex", p18:"stal", p20:"stal", p21:"stal"};
+  for(const k in A){ if(NODES[k]) NODES[k].art=A[k]; } })();
 
 /* ============================ STATE ============================ */
 let S = null;
@@ -376,6 +479,8 @@ function newState(){ return {
   latinum:20, stand:{k:0,f:0,r:0,o:0}, tokens:{},
   hull:20, maxHull:20, pay:0, contract:null,
   freeReroll:false, romulanKin:false, node:"p1", combat:null,
+  fueled:false, cleanManifest:false, disruptorTune:0, _tuned:false,
+  face:{pres:"n", expr:"neutral", brows:"auto"},
   psi:null, imported:false
 };}
 
@@ -385,6 +490,274 @@ const app=()=>$("#app");
 function d(sides){return Math.floor(Math.random()*sides)+1;}
 function rollAttrDice(){return d(6)+d(6)+3;} // 5..15
 function clampStand(v){return Math.max(-3,Math.min(3,v));}
+
+
+/* ============================ SOUND (Web Audio, offline) ============================ */
+const SND = {on:true, ctx:null};
+function actx(){
+  if(!SND.ctx){ try{ SND.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ SND.ctx=null; } }
+  if(SND.ctx && SND.ctx.state==="suspended"){ SND.ctx.resume(); }
+  return SND.ctx;
+}
+function tone(o){
+  const c=actx(); if(!c||!SND.on) return;
+  const t=c.currentTime+(o.delay||0), dur=o.dur||.15, vol=o.vol||.18;
+  const osc=c.createOscillator(), g=c.createGain();
+  osc.type=o.type||"sine"; osc.frequency.setValueAtTime(o.f||440,t);
+  if(o.f2) osc.frequency.exponentialRampToValueAtTime(Math.max(1,o.f2),t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  osc.connect(g).connect(c.destination); osc.start(t); osc.stop(t+dur+0.03);
+}
+function noise(o){
+  const c=actx(); if(!c||!SND.on) return;
+  const t=c.currentTime+(o.delay||0), dur=o.dur||.2, vol=o.vol||.16;
+  const n=Math.floor(c.sampleRate*dur), buf=c.createBuffer(1,n,c.sampleRate), ch=buf.getChannelData(0);
+  for(let i=0;i<n;i++) ch[i]=Math.random()*2-1;
+  const src=c.createBufferSource(); src.buffer=buf;
+  const g=c.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  let node=src;
+  if(o.filter){ const bf=c.createBiquadFilter(); bf.type=o.ftype||"lowpass";
+    bf.frequency.setValueAtTime(o.filter,t); if(o.sweep) bf.frequency.exponentialRampToValueAtTime(o.sweep,t+dur);
+    node.connect(bf); node=bf; }
+  node.connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
+}
+const sfx = {
+  tick(){ tone({f:1250,type:"square",dur:.025,vol:.05}); },
+  settleWin(){ tone({f:540,f2:900,type:"triangle",dur:.16,vol:.16}); tone({f:820,type:"sine",dur:.2,vol:.1,delay:.05}); },
+  settleLose(){ tone({f:320,f2:110,type:"sawtooth",dur:.32,vol:.15}); },
+  disruptor(){ tone({f:980,f2:170,type:"sawtooth",dur:.16,vol:.15}); noise({dur:.12,vol:.07,filter:2200,sweep:400}); },
+  torpedo(){ tone({f:150,f2:46,type:"sine",dur:.5,vol:.22}); noise({dur:.42,vol:.13,filter:900,sweep:90}); },
+  whoosh(){ noise({dur:.5,vol:.18,filter:280,ftype:"bandpass",sweep:2000}); },
+  hit(){ tone({f:210,f2:60,type:"square",dur:.22,vol:.18}); noise({dur:.16,vol:.1,filter:1400,sweep:180}); },
+  ui(){ tone({f:680,type:"sine",dur:.03,vol:.04}); },
+  klaxon(){ tone({f:460,f2:340,type:"sawtooth",dur:.28,vol:.13}); tone({f:460,f2:340,type:"sawtooth",dur:.28,vol:.13,delay:.34}); }
+};
+function toggleSound(){
+  SND.on=!SND.on;
+  if(SND.on){ actx(); sfx.ui(); }
+  const b=document.getElementById("sndbtn"); if(b) b.textContent = SND.on ? "\U0001F50A" : "\U0001F507";
+}
+
+/* ============================ PORTRAITS (inline SVG, offline) ============================ */
+const PORT = {
+  Human:    {skin:"#c8a078", hair:"#3b2a1c", accent:"var(--cyan)"},
+  Vulcan:   {skin:"#d8b48c", hair:"#1b1b22", ears:"point", brows:"angled", bowl:true, accent:"#c07a2a"},
+  Andorian: {skin:"#6ea8d8", hair:"#e8eef2", antennae:true, accent:"#3a6ea5"},
+  Tellarite:{skin:"#b78a5a", hair:"#5a4326", tusk:true, accent:"#8a5a2a"},
+  Klingon:  {skin:"#8a5a3a", hair:"#140f0a", brow:"ridge", beard:true, accent:"var(--k)"},
+  Romulan:  {skin:"#d6c6ae", hair:"#141018", ears:"point", brows:"angled", bowl:true, accent:"var(--r)"},
+  Orion:    {skin:"#5aa04a", hair:"#141014", accent:"var(--o)"},
+  Caitian:  {skin:"#c88a3a", hair:"#7a4a1a", feline:true, accent:"#c07a2a"},
+  Edoan:    {skin:"#c46a3a", hair:"#241610", accent:"#a04a2a"},
+  Spacer:   {skin:"#b09070", hair:"#2a2a2a", accent:"var(--dim)"}
+};
+const NPC = {
+  stal:   {base:"Romulan", hair:"#0f0c14", fem:true, expr:"stern", brows:"angled", accent:"var(--r)", cap:"Subcommander S'Tal"},
+  korrd:  {base:"Klingon", expr:"stern", brows:"heavy", accent:"var(--k)", cap:"Korrd sutai-Ktarra"},
+  bex:    {base:"Human", skin:"#a87850", hair:"#c0532a", short:true, fem:true, expr:"smile", brows:"arched", accent:"var(--cyan)", cap:"Bex \u00b7 your engineer"},
+  sitar:  {base:"Orion", hair:"#0f0f14", expr:"smile", brows:"arched", accent:"var(--o)", cap:"Broker Sitar"},
+  verron: {base:"Human", skin:"#caa480", hair:"#5a3a22", fem:true, expr:"neutral", brows:"flat", accent:"var(--f)", cap:"Della Verron"},
+  grey:   {base:"Human", skin:"#c8c0b0", hair:"#7d7d82", expr:"neutral", brows:"flat", accent:"var(--dim)", cap:"Mr. Grey"}
+};
+/* Eyebrow shapes — the same set the creator offers. */
+function browPath(shape){
+  switch(shape){
+    case "angled":  return `<path d="M33 47 L46 43 M67 47 L54 43" stroke="#0008" stroke-width="2.2" fill="none"/>`;
+    case "arched":  return `<path d="M33 47 Q40 41 47 45 M53 45 Q60 41 67 47" stroke="#0007" stroke-width="2" fill="none"/>`;
+    case "heavy":   return `<path d="M32 45 L47 45 M53 45 L68 45" stroke="#000a" stroke-width="4" stroke-linecap="round" fill="none"/>`;
+    case "worried": return `<path d="M33 44 L46 47 M67 44 L54 47" stroke="#0008" stroke-width="2.2" fill="none"/>`;
+    case "flat":
+    default:        return `<path d="M34 46 L46 46 M54 46 L66 46" stroke="#0007" stroke-width="2.4" fill="none"/>`;
+  }
+}
+/* Mouth by expression (with optional feminine lip tint). */
+function mouthPath(expr, fem){
+  const lip = fem ? `<path d="M41 74 Q50 71 59 74 Q50 80 41 74 Z" fill="#a2444a" opacity=".45"/>` : "";
+  switch(expr){
+    case "smile": return lip+`<path d="M39 73 Q50 86 61 73" stroke="#0008" stroke-width="2" fill="none"/>`;
+    case "stern": return lip+`<path d="M42 76 L58 76" stroke="#0009" stroke-width="2.4" fill="none"/>`;
+    case "frown": return lip+`<path d="M42 79 Q50 72 58 79" stroke="#0008" stroke-width="2" fill="none"/>`;
+    case "neutral":
+    default:      return lip+`<path d="M42 75 Q50 79 58 75" stroke="#0007" stroke-width="2" fill="none"/>`;
+  }
+}
+function buildFace(cfg, size){
+  size = size || 96;
+  const skin=cfg.skin||"#b09070", hair=cfg.hair||"#2a2a2a", accent=cfg.accent||"var(--dim)";
+  const expr = cfg.expr || "neutral";
+  const brows = cfg.brows || "flat";
+  const p=[];
+  // uniform collar
+  p.push(`<path d="M18 120 L20 103 Q50 88 80 103 L82 120 Z" fill="${accent}" opacity=".5"/>`);
+  p.push(`<path d="M41 103 L50 116 L59 103" fill="none" stroke="#0a121a" stroke-width="2"/>`);
+  p.push(`<rect x="42" y="80" width="16" height="20" fill="${skin}"/>`);
+  // ears
+  if(cfg.ears==="point"){
+    p.push(`<path d="M25 58 L14 43 L28 53 Z" fill="${skin}" stroke="#0005"/>`);
+    p.push(`<path d="M75 58 L86 43 L72 53 Z" fill="${skin}" stroke="#0005"/>`);
+  } else if(!cfg.feline){
+    p.push(`<ellipse cx="24" cy="58" rx="6" ry="8" fill="${skin}"/><ellipse cx="76" cy="58" rx="6" ry="8" fill="${skin}"/>`);
+  }
+  // head
+  p.push(`<ellipse cx="50" cy="56" rx="26" ry="31" fill="${skin}"/>`);
+  // masculine jawline shadow (subtle, strengthens the "male" read)
+  if(cfg.pres==="m" && !cfg.beard){
+    p.push(`<path d="M27 61 Q33 85 50 90 Q67 85 73 61" stroke="#0002" stroke-width="3" fill="none"/>`);
+  }
+  // feline
+  if(cfg.feline){
+    p.push(`<path d="M28 32 L18 12 L37 27 Z M72 32 L82 12 L63 27 Z" fill="${skin}"/>`);
+    p.push(`<ellipse cx="50" cy="70" rx="13" ry="9" fill="#0002"/>`);
+    p.push(`<path d="M32 66 L14 62 M32 70 L14 72 M68 66 L86 62 M68 70 L86 72" stroke="#fff6" stroke-width="1"/>`);
+  }
+  // klingon brow ridge
+  if(cfg.brow==="ridge"){
+    p.push(`<path d="M30 39 Q40 31 50 39 Q60 31 70 39 Q60 43 50 41 Q40 43 30 39 Z" fill="#0004"/>`);
+    p.push(`<path d="M37 41 L37 31 M44 41 L44 29 M50 41 L50 28 M56 41 L56 29 M63 41 L63 31" stroke="#0003" stroke-width="1.4"/>`);
+  }
+  // hair
+  if(cfg.bowl){
+    p.push(`<path d="M23 44 Q22 20 50 18 Q78 20 77 44 L77 40 Q50 34 23 40 Z" fill="${hair}"/>`);
+    p.push(`<path d="M23 40 Q50 46 77 40 L77 45 Q50 50 23 45 Z" fill="${hair}"/>`);
+    if(cfg.fem){ p.push(`<path d="M23 44 Q19 68 25 86 L31 84 Q27 64 28 46 Z M77 44 Q81 68 75 86 L69 84 Q73 64 72 46 Z" fill="${hair}"/>`); }
+  } else if(cfg.short){
+    p.push(`<path d="M24 44 Q24 20 50 18 Q76 20 76 44 Q70 30 50 30 Q30 30 24 44 Z" fill="${hair}"/>`);
+    if(cfg.fem){ p.push(`<path d="M24 44 Q20 60 26 76 L31 74 Q27 58 28 46 Z M76 44 Q80 60 74 76 L69 74 Q73 58 72 46 Z" fill="${hair}"/>`); }
+  } else {
+    p.push(`<path d="M22 46 Q20 17 50 16 Q80 17 78 46 Q78 30 66 26 Q58 34 50 30 Q42 34 34 26 Q22 30 22 46 Z" fill="${hair}"/>`);
+    if(cfg.fem){ p.push(`<path d="M22 44 Q17 72 24 92 L31 89 Q26 66 28 48 Z M78 44 Q83 72 76 92 L69 89 Q74 66 72 48 Z" fill="${hair}"/>`); }
+  }
+  // antennae
+  if(cfg.antennae){
+    p.push(`<path d="M40 22 Q33 6 29 4" stroke="${skin}" stroke-width="3" fill="none"/><circle cx="29" cy="4" r="3" fill="${accent}"/>`);
+    p.push(`<path d="M60 22 Q67 6 71 4" stroke="${skin}" stroke-width="3" fill="none"/><circle cx="71" cy="4" r="3" fill="${accent}"/>`);
+  }
+  // brows
+  p.push(browPath(brows));
+  // eyes
+  p.push(`<ellipse cx="40" cy="53" rx="5" ry="3.4" fill="#fff" opacity=".85"/><circle cx="40" cy="53" r="2" fill="#120d08"/>`);
+  p.push(`<ellipse cx="60" cy="53" rx="5" ry="3.4" fill="#fff" opacity=".85"/><circle cx="60" cy="53" r="2" fill="#120d08"/>`);
+  // expression around the eyes
+  if(expr==="smile"){ p.push(`<path d="M35 56 Q40 58 45 56 M55 56 Q60 58 65 56" stroke="#0004" stroke-width="1" fill="none"/>`); }
+  else if(expr==="stern"){ p.push(`<path d="M35 49 L45 50 M55 50 L65 49" stroke="#0004" stroke-width="1.4" fill="none"/>`); }
+  // nose
+  if(cfg.tusk){
+    p.push(`<ellipse cx="50" cy="66" rx="9" ry="6" fill="#0003"/><circle cx="46" cy="66" r="1.6" fill="#120d08"/><circle cx="54" cy="66" r="1.6" fill="#120d08"/>`);
+    p.push(`<path d="M43 74 L41 83 M57 74 L59 83" stroke="#efe6cf" stroke-width="2"/>`);
+  } else {
+    p.push(`<path d="M50 55 L47 65 Q50 67 53 65 Z" fill="#0002" stroke="#0003"/>`);
+    // beard sits under the chin; mouth expression still shows
+    if(cfg.beard){ p.push(`<path d="M33 69 Q50 98 67 69 Q60 86 50 88 Q40 86 33 69 Z" fill="${hair}"/>`); }
+    p.push(mouthPath(expr, cfg.fem));
+  }
+  // frame accent
+  p.push(`<rect x="3.5" y="3.5" width="93" height="113" rx="8" fill="none" stroke="${accent}" opacity=".4"/>`);
+  return `<svg class="pface" width="${size}" height="${Math.round(size*1.18)}" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">${p.join("")}</svg>`;
+}
+// face = {pres:"m"|"f"|"n", expr:"neutral"|"smile"|"stern"|"frown", brows:"auto"|"flat"|"angled"|"arched"|"heavy"|"worried"}
+function playerPortrait(race,size,face){
+  const base=PORT[race]||PORT.Spacer, f=face||{};
+  const cfg=Object.assign({}, base, {
+    expr: f.expr||"neutral",
+    pres: f.pres||"n",
+    fem: (f.pres==="f"),
+    brows: (f.brows && f.brows!=="auto") ? f.brows : (base.brows||"flat")
+  });
+  return buildFace(cfg, size);
+}
+function npcPortrait(key,size){ const n=NPC[key]; if(!n) return ""; return buildFace(Object.assign({}, PORT[n.base]||PORT.Spacer, n), size); }
+function npcArt(list){
+  const arr = Array.isArray(list)?list:[list];
+  const items = arr.map(k=>{ const key=(typeof k==="string")?k:k.key; const n=NPC[key]||{};
+    return `<div class="pcard">${npcPortrait(key,84)}<div class="cap">${(n.cap||"")}</div></div>`; }).join("");
+  return `<div class="npc-art">${items}</div>`;
+}
+function shipSVG(which,w){
+  if(which==="d10"){
+    return `<svg class="shipsil" width="${w||160}" height="78" viewBox="0 0 210 96" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 48 L70 42 L156 32 L198 48 L156 64 L70 54 Z" fill="var(--panel)" stroke="var(--k)" stroke-width="1.5"/>
+      <path d="M70 42 L44 12 L82 38 Z" fill="var(--panel2)" stroke="var(--k)"/>
+      <path d="M70 54 L44 84 L82 58 Z" fill="var(--panel2)" stroke="var(--k)"/>
+      <circle cx="44" cy="12" r="4" fill="var(--k)"/><circle cx="44" cy="84" r="4" fill="var(--k)"/>
+      <ellipse cx="162" cy="48" rx="18" ry="13" fill="#0b131b" stroke="var(--k)"/>
+      <circle cx="168" cy="48" r="3" fill="var(--amber)"/>
+      <path d="M198 48 L208 44 M198 48 L208 52" stroke="var(--k)" stroke-width="1"/>
+    </svg>`;
+  }
+  return `<svg class="shipsil" width="${w||130}" height="66" viewBox="0 0 200 96" xmlns="http://www.w3.org/2000/svg">
+    <rect x="28" y="34" width="96" height="30" rx="8" fill="var(--panel)" stroke="var(--amber)" stroke-width="1.5"/>
+    <path d="M124 36 L156 43 L156 55 L124 62 Z" fill="var(--panel2)" stroke="var(--amber)"/>
+    <circle cx="146" cy="49" r="3" fill="var(--cyan)"/>
+    <rect x="44" y="16" width="60" height="9" rx="4" fill="var(--panel2)" stroke="var(--amber)"/>
+    <rect x="44" y="72" width="60" height="9" rx="4" fill="var(--panel2)" stroke="var(--amber)"/>
+    <circle cx="48" cy="20" r="3" fill="var(--cyan)"/><circle cx="48" cy="77" r="3" fill="var(--cyan)"/>
+    <path d="M60 34 L64 25 M78 34 L74 25 M60 64 L64 72 M78 64 L74 72" stroke="var(--amber)" stroke-width="1"/>
+  </svg>`;
+}
+/* Drop-in bitmap sprites for cross-project art parity with the Combat Simulator export.
+   Paste a data-URI PNG into a slot — e.g. gambit:"data:image/png;base64,iVBORw0KGgo..."
+   (the Lightning Class IV sprite) — and the game shows the real sprite everywhere in place
+   of the SVG silhouette. Leave "" to keep the built-in vector art. Source sprites are
+   256x256, drawn nose-up (bow toward the top). */
+const SHIP_SPRITES = { gambit:"", d10:"" };
+function shipArt(which,w){
+  const b=SHIP_SPRITES[which];
+  if(b){ const sz=w||150; return `<img class="shipsil" src="${b}" width="${sz}" height="${sz}" alt="" style="object-fit:contain">`; }
+  return shipSVG(which,w);
+}
+function renderArt(a){
+  if(a==="d10"||a==="gambit") return `<div class="npc-art" style="justify-content:center">${shipArt(a, a==="d10"?170:150)}</div>`;
+  return npcArt(a);
+}
+
+/* ============================ SHIP DOSSIER (FASA Combat Simulator format) ============================ */
+const SHIPS = {
+  gambit:{ name:"S.S. Verity's Gambit", sil:"gambit",
+    cls:"Free Trader \u2014 modified Lightning-Class IV Blockade Runner",
+    rows:[
+      ["Hull / Origin","Orion civil hull, re-flagged out of Haven"],
+      ["Superstructure","18 points"],
+      ["Length / Weight","118 m \u00b7 9,400 mt"],
+      ["Cargo","Class IV \u2014 approx. 4,000 mt"],
+      ["Crew","4 (you, Bex, two hands)"],
+      ["Warp \u2014 Cruise / Emergency","Warp 5 / Warp 7"],
+      ["Beam Weapons","2 \u00d7 Type-II light disruptors (KD-3), forward"],
+      ["Missile Weapons","None"],
+      ["Deflector Shields","OSJ-1, light (Max 8)"],
+      ["Combat Efficiency (WDF)","6.4"]
+    ]},
+  d10:{ name:"IKS \u201CDevastator\u201D", sil:"d10",
+    cls:"D-10 (Riskadh) Class VIII\u2013X Cruiser \u00b7 Imperial Klingon States",
+    rows:[
+      ["Model / Service","D-10 line \u00b7 in service since SD 1/9606"],
+      ["Superstructure","60 points"],
+      ["Length / Weight","265 m \u00b7 140,000 mt"],
+      ["Crew","520"],
+      ["Warp \u2014 Cruise / Emergency","Warp 8 / Warp 9"],
+      ["Beam Weapons","8\u201310 \u00d7 medium-heavy disruptors, all arcs"],
+      ["Missile Weapons","1\u20132 photon torpedoes, fore / aft"],
+      ["Deflector Shields","Heavy (Max 20)"],
+      ["Combat Efficiency (WDF)","\u2248 148"],
+      ["Threat Assessment","Outguns a free trader roughly 20-to-1"]
+    ]}
+};
+function statBlk(sh){
+  const rows = sh.rows.map(r=>`<div class="statrow"><span class="l">${r[0]}</span><span class="v">${r[1]}</span></div>`).join("");
+  return `<div class="statblk">${shipArt(sh.sil,180)}<h3>${sh.name}</h3><div class="cls">${sh.cls}</div><div class="statgrid">${rows}</div></div>`;
+}
+function openDossier(fromGame){
+  app().innerHTML = `${fromGame?renderHUD():""}
+   <div class="card dossier"><div class="eyebrow">Ship's Registry \u00b7 Combat Simulator Dossier</div>
+    <h1 style="font-size:20px">Vessel Data</h1>
+    <p class="mini dim" style="margin-top:6px">Statistics in FASA Star Fleet / Combat Simulator format. <span class="wdf">WDF</span> = Weapon Damage Factor \u2014 the higher, the deadlier. The gap below is the whole story of this run.</p>
+    ${statBlk(SHIPS.gambit)}
+    ${statBlk(SHIPS.d10)}
+    <button class="btn small" onclick="${fromGame?'renderNode()':'renderTitle()'}">\u2039 Back</button>
+   </div>`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
 
 function traitBonus(s,tag,attrUsed){
   let b=0; const R=s.race;
@@ -405,12 +778,14 @@ function renderTitle(){
   <div class="title-hero"><div class="frame">
     <div class="eyebrow">FASA-era · Star Trek RPG · The Triangle</div>
     <h1>The Precipice Run<span class="sub">A solo branching adventure for one captain<span class="blink"> ▊</span></span></h1>
+    <div class="ver">Build v${GAME_VERSION}</div>
     <p class="dim" style="max-width:60ch;margin:14px auto 4px">You captain the free trader <span class="amber">Verity's Gambit</span> on the independent routes between four empires. Tonight, one sealed cryo-container will make you a fortune, a fugitive, or a legend. Roll your captain and fly.</p>
   </div></div>
   <div class="card">
     <button class="btn" onclick="startCreate()">▸ New captain — roll one here</button>
     <button class="btn" onclick="showImport()">▸ Import an officer from a Personnel File</button>
     <button class="btn" onclick="showLoad()">▸ Resume from a save code</button>
+    <button class="btn" onclick="openDossier(false)">▸ Ship's registry — combat dossier</button>
     <div id="loadbox"></div>
   </div>
   <div class="card"><h2>How it plays</h2>
@@ -551,7 +926,9 @@ function renderCreate(){
 
   <div class="card"><h2>1 · Species</h2>
     <p class="dim mini" style="margin-bottom:10px">Your species sets attribute modifiers and a signature trait that changes what you can attempt.</p>
-    <div class="grid2">${raceCards}</div></div>
+    <div class="grid2">${raceCards}</div>
+    <div style="text-align:center;margin-top:14px">${draft.race?playerPortrait(draft.race,120,draft.face):'<span class="mini dim">Select a species to preview your captain</span>'}</div>
+    ${faceControls()}</div>
 
   <div class="card"><h2>2 · Attributes</h2>
    <p class="dim mini" style="margin-bottom:8px">Roll 2d6+3 per attribute, then species modifiers apply. You get two re-rolls of the full spread.</p>
@@ -582,6 +959,20 @@ function renderAttrBoxes(){
   }).join("");
 }
 function pickRace(n){ draft.race=n; renderCreate(); }
+function faceControls(){
+  if(!draft.race) return "";
+  if(!draft.face) draft.face={pres:"n", expr:"neutral", brows:"auto"};
+  const f=draft.face;
+  const grp=(label,key,opts)=>`<div class="facerow"><span class="facelbl">${label}</span><div class="faceopts">`+
+    opts.map(o=>`<button class="fbtn ${f[key]===o[0]?'on':''}" onclick="setFace('${key}','${o[0]}')">${o[1]}</button>`).join("")+`</div></div>`;
+  return `<div class="facegrp">
+    <p class="dim mini" style="letter-spacing:.06em;margin-bottom:2px">Appearance \u2014 make the captain your own. (Defaults lean serious; smile if you dare.)</p>`+
+    grp("Presentation","pres",[["m","Masculine"],["f","Feminine"],["n","Neutral"]])+
+    grp("Expression","expr",[["neutral","Neutral"],["smile","Smiling"],["stern","Stern"],["frown","Frown"]])+
+    grp("Eyebrows","brows",[["auto","Auto"],["flat","Flat"],["arched","Arched"],["angled","Angled"],["heavy","Heavy"],["worried","Worried"]])+
+  `</div>`;
+}
+function setFace(k,v){ if(!draft.face) draft.face={pres:"n",expr:"neutral",brows:"auto"}; draft.face[k]=v; renderCreate(); }
 function doRollAttrs(){
   if(draft._rolled && draft._rerolls<=0) return;
   if(!draft._rolled){ draft._rerolls=2; } else { draft._rerolls--; }
@@ -621,7 +1012,7 @@ function renderHUD(){
   const hullpct=Math.max(0,S.hull/S.maxHull*100);
   return `<div class="hud">
    <div class="hud-top">
-     <div class="hud-id"><b>${esc(S.captain)}</b> · ${S.race} · <span class="dim">${esc(S.ship)}</span></div>
+     <div class="hud-id-wrap">${playerPortrait(S.race,34,S.face)}<div class="hud-id"><b>${esc(S.captain)}</b> · ${S.race}<br><span class="dim">${esc(S.ship)}</span> · <span class="reglink" onclick="openDossier(true)">REGISTRY</span></div></div>
      <div class="lat"><span class="${low}">${S.latinum} BARS</span></div>
    </div>
    <div class="bars">
@@ -653,7 +1044,7 @@ function renderNode(){
      <div class="eyebrow">${n.eye||''}</div>
      <h1 style="font-size:22px">${n.title}</h1>
      <div class="rule"></div>
-     ${n.text}${extra}
+     ${n.art?renderArt(n.art):""}${n.text}${extra}
    </div>
    <div class="card">${choices}</div>
    ${saveBar()}`;
@@ -668,6 +1059,7 @@ function renderChoice(c,i){
   return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${c.t}${sub}</button>`;
 }
 function choose(i){
+  sfx.ui();
   const n=NODES[S.node]; const c=n.choices[i];
   if(c.cond && !c.cond(S)) return;
   if(c.check){ return runCheck(c); }
@@ -698,12 +1090,12 @@ function runCheck(c){
    </div>`;
   document.body.appendChild(ovl);
   let ticks=0;
-  const iv=setInterval(()=>{ $("#die").textContent=d(10); if(++ticks>10){clearInterval(iv); settle();} },70);
+  const iv=setInterval(()=>{ $("#die").textContent=d(10); sfx.tick(); if(++ticks>10){clearInterval(iv); settle();} },70);
 
   function settle(){
     const roll=d(10);
     const total=best+tb+klBonus+roll;
-    const win=total>=chk.tn;
+    const win=total>=chk.tn; sfx[win?"settleWin":"settleLose"]();
     const die=$("#die"); die.classList.remove("rolling"); die.textContent=roll;
     die.style.borderColor = win?"var(--good)":"var(--rust)";
     die.style.color = win?"var(--good)":"var(--rust)";
@@ -734,6 +1126,7 @@ function resolveCheck(win){
 
 /* ============================ COMBAT ============================ */
 function startCombat(){
+  sfx.klaxon();
   S.combat={foeHull:D10.hull, round:1, log:["The D-10 fills your forward screen. This was, on reflection, a poor idea."]};
   renderCombat();
 }
@@ -744,6 +1137,7 @@ function renderCombat(){
   app().innerHTML=`${renderHUD()}
    <div class="card story">
      <div class="eyebrow">Combat · Round ${cb.round}</div>
+     <div class="combat-ships">${shipArt("gambit",118)}<span class="mini dim">— vs —</span>${shipArt("d10",150)}</div>
      <h1 style="font-size:20px">${D10.name}</h1>
      <div class="combat-foe"><span class="mini dim">ENEMY HULL</span>
        <div class="track" style="flex:1;height:10px"><span class="fill2" style="width:${foePct}%;background:linear-gradient(90deg,var(--k),var(--amber))"></span></div>
@@ -768,12 +1162,14 @@ function cbAct(kind){
   if(kind==="surrender"){ S.stand.k=clampStand(S.stand.k-1); S.latinum=Math.max(0,S.latinum-4);
     S.node="p8"; return renderNode(); }
   if(kind==="subsys"){
+    sfx.disruptor();
     return combatCheck("INT",15,andor,(win)=>{
       if(win){ cb.log.push("A clean shot cripples their tractor array — you punch clear and dive for open space."); S.stand.k=clampStand(S.stand.k-1); S.node="p16"; renderNode(); }
       else { cb.log.push("Your shot goes wide of the emitter. They answer."); enemyFire(); }
     });
   }
   if(kind==="evade"){
+    sfx.whoosh();
     return combatCheck("DEX",11,andor,(win)=>{
       cb._evade = win;
       cb.log.push(win?"You slew the Gambit through their firing solution — their next volley will bite less.":"The old freighter is too slow; the maneuver barely helps.");
@@ -781,8 +1177,9 @@ function cbAct(kind){
     });
   }
   if(kind==="fire"){
+    sfx.disruptor();
     return combatCheck("DEX",10,andor,(win)=>{
-      if(win){ const dmg=d(6)+3+andor; cb.foeHull=Math.max(0,cb.foeHull-dmg);
+      if(win){ const dmg=d(6)+3+andor+(S.disruptorTune||0); cb.foeHull=Math.max(0,cb.foeHull-dmg);
         cb.log.push(`Direct hit — ${dmg} damage to the cruiser. Barely a scratch on that hull, but the crew cheers.`);
         if(cb.foeHull<=0){ return combatVictory(); } }
       else cb.log.push("Your volley splashes against their shields. Nothing.");
@@ -796,7 +1193,7 @@ function combatCheck(attr,tn,bonus,cb2){
   ovl.innerHTML=`<div class="ovl-card"><div class="eyebrow">${attr} vs ${tn}</div>
     <div class="d10 rolling" id="die">?</div><div id="cres" class="mini dim" style="margin-top:8px"></div></div>`;
   document.body.appendChild(ovl);
-  let t=0; const iv=setInterval(()=>{$("#die").textContent=d(10); if(++t>8){clearInterval(iv);fin();}},70);
+  let t=0; const iv=setInterval(()=>{$("#die").textContent=d(10); sfx.tick(); if(++t>8){clearInterval(iv);fin();}},70);
   function fin(){ const roll=d(10); const total=val+roll; const win=total>=tn;
     const die=$("#die"); die.classList.remove("rolling"); die.textContent=roll;
     die.style.borderColor=win?"var(--good)":"var(--rust)"; die.style.color=win?"var(--good)":"var(--rust)";
@@ -808,8 +1205,10 @@ function enemyFire(){
   const cb=S.combat;
   let dmg=D10.atkMin+Math.floor(Math.random()*(D10.atkMax-D10.atkMin+1));
   if(cb._evade){ dmg=Math.max(1,dmg-4); }
+  const torp = Math.random()<0.4;
+  sfx[torp?"torpedo":"disruptor"](); setTimeout(()=>sfx.hit(),150);
   S.hull=Math.max(0,S.hull-dmg);
-  cb.log.push(`The D-10 returns fire — ${dmg} damage. ${S.hull<=0?'':'Deck two is burning; Bex is on it.'}`);
+  cb.log.push(`${torp?"A photon torpedo":"The disruptor battery"} answers — ${dmg} damage. ${S.hull<=0?'':'Deck two is burning; Bex is on it.'}`);
   cb.round++;
   if(S.hull<=0){ return combatCrippled(); }
   renderCombat();
