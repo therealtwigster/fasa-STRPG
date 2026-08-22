@@ -5,7 +5,7 @@
 everything is and how to use it) and the handover (current state, conventions,
 and how to continue the work in a future session).*
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22  ·  Current game build: **v0.5**
 
 ---
 
@@ -39,7 +39,7 @@ the owner's own books.
 | `2007_The_Triangle_ocr.md` | 441 KB · ~70,500 words | OCR of *The Triangle* (99 pp) |
 | `2005_The_Romulans_ocr.md` | 334 KB · ~53,900 words | OCR of *The Romulans* (88 pp) |
 | `adventure_the_precipice_run.md` | 28 KB | "The Precipice Run" — original solo gamebook |
-| `precipice_run_game.html` | 60 KB | Playable single-file HTML version of the gamebook |
+| `precipice_run_game.html` | ~83 KB | Playable single-file HTML game — **v0.5** (portraits, sound, dossier, customization) |
 | `README.md` | — | This document |
 
 ### Project knowledge — `/mnt/project/`
@@ -126,15 +126,31 @@ newly-authored asset.
     and a six-attribute set (STR/END/INT/DEX/CHA/LUC) rolled 2d6+3 (range 5–15)
     with two re-rolls.
   - *Import an officer* — paste a sheet from the companion generator (see §6).
+- **Portraits with customization** (v0.5): every captain gets an in-code SVG
+  portrait — pick **presentation**, **expression**, and **eyebrow shape** in the
+  creator, with a live preview; it also appears as the HUD avatar. Six named NPCs
+  have their own portraits and fitting expressions.
 - **Dice checks** shown live in an overlay: best applicable attribute + trait
-  bonus + 1d10 vs a target number.
+  bonus + 1d10 vs a target number. (The beloved on-screen roll animation is
+  unchanged — sound was layered on top, not swapped in.)
+- **Sound** (v0.3) via the Web Audio API, fully offline (no files): disruptor and
+  photon-torpedo fire, an evade *whoosh*, a combat klaxon, impact hits, verdict
+  chimes, and dice ticks — with a persistent 🔊/🔇 toggle top-right.
+- **Ship dossier** (v0.2) in FASA *Combat Simulator* format for both hulls, from
+  the title screen or the HUD **REGISTRY** link; `SHIP_SPRITES` (v0.4) lets real
+  bitmap sprites drop in over the SVG silhouettes.
 - **A Klingon D-10 ship-combat encounter** (fire / evade / target-tractor /
-  surrender) — near-unwinnable by canon, with crippled → surrender/ram branches.
-- **Six endings** (`end_wage`, `end_thirty`, `end_quiet`, `end_free`,
-  `end_warlord`, `end_marked`, plus a `end_grounded` fail state).
+  surrender) — near-unwinnable by canon, with crippled → surrender/ram branches,
+  now with ship silhouettes and combat audio.
+- **35 story nodes** including the v0.3 additions — a *Before You Burn* pre-flight
+  (with priced options, v0.4), a *Silent Skiff* derelict encounter, and a
+  *Precipice customs* approach — leading to **seven ending states** (`end_wage`,
+  `end_thirty`, `end_quiet`, `end_free`, `end_warlord`, `end_marked`, and the
+  `end_grounded` fail state).
 - **Save / load** via a base64 code — **no `localStorage`** (browser storage is
   intentionally avoided; state is in memory + copyable code).
-- A persistent HUD tracking Latinum, Standings, attributes, hull, and tokens.
+- A persistent HUD tracking Latinum, Standings, attributes, hull, tokens, and the
+  captain's avatar.
 
 ### Architecture (for future edits)
 - Story lives in a `NODES` object (`p1`…`p28` plus the ending nodes).
@@ -149,9 +165,11 @@ newly-authored asset.
 
 ### Validation done
 Headless Node + a DOM-stub harness: `node --check` passes; a graph walk reports
-28 nodes, all seven endings reachable, zero dead links, and correct race
-start-bonuses. The importer was tested against realistically-pasted sheets
-(see §6).
+**35 nodes**, all seven endings reachable, zero dead links, correct race
+start-bonuses, and no bad art references; a closure sim runs every node/check
+effect against live state; and all **720** portrait combinations (race ×
+presentation × expression × eyebrow) render as well-formed SVG. The importer was
+tested against realistically-pasted sheets (see §6).
 
 ---
 
@@ -216,17 +234,41 @@ detectable, yours to set otherwise).
 - **Scope big builds honestly and confirm forks before starting.** The import
   work offered three options (full bridge / lighter reskin / keep separate); the
   owner chose *keep separate*, which is what shipped.
+- **Track versions.** First build is v0.1; +0.1 per iteration. Bump
+  `GAME_VERSION` (title-screen stamp) and add a row to §0 on every change.
 - **All work is personal-use** conversion or original creation from the owner's
   own scanned FASA books.
 
 ---
 
+## 0. Version history
+
+Versioning convention: the first build is **v0.1**; every subsequent iteration
+increments by **0.1**. Bump `GAME_VERSION` at the top of the game's `<script>`
+(it renders as a *Build vX.Y* stamp on the title screen) whenever you ship a
+change, and add a row here.
+
+| Version | Change |
+|---|---|
+| **v0.1** | Original build. Core engine: seven FASA races, six attributes rolled 2d6+3, the live on-screen **dice-roll overlay**, four faction standings, tokens, 28 story nodes, six endings plus a `grounded` fail state, the Klingon **D-10 ship-combat** encounter, base64 save codes, and the paste-in **officer-import bridge**. |
+| **v0.2** | **Ship dossier** in FASA *Starship Combat Simulator* format, with canonical stats grounded in the OCR — *Verity's Gambit* modelled as a Lightning-Class IV blockade-runner variant, the *IKS Devastator* as a D-10 (Riskadh) Class VIII–X cruiser. Reachable from the title and a HUD **REGISTRY** link. |
+| **v0.3** | **SVG character portraits** (player + six NPCs, drawn in-code, offline, no trademarked art); a **Web Audio sound suite** — disruptor / photon-torpedo / evade-*whoosh* / klaxon / impact / verdict chimes, plus dice ticks — with a persistent mute toggle, **preserving the original dice-roll effects**; and **five new branch nodes** (28 → 35): the *Before You Burn* pre-flight, the *Silent Skiff* derelict encounter, and the *Precipice customs* approach. |
+| **v0.4** | **Cost transparency** in *Before You Burn* — live latinum count, an explicit price on every paid option, and purchase-status flags — plus a drop-in **bitmap ship-sprite hook** (`SHIP_SPRITES`, with the SVG silhouettes as fallback) for art parity with the separate *Tactical Command* Combat-Simulator project. |
+| **v0.5** | **Portrait customization** in the creator: **presentation** (masculine / feminine / neutral), **expression** (neutral / smiling / stern / frown), and **eyebrow shape** (auto / flat / arched / angled / heavy / worried), with a live preview; per-NPC expressions so characters read at a glance; and the **Build vX.Y** version stamp on the title. |
+
+*(v0.2 and v0.3 were developed in one working session but are distinct feature
+sets, so they're logged as separate versions. It's your scheme — renumber freely.)*
+
+---
+
 ## 8. Handover — current status & next steps
 
-### Status: complete and validated
+### Status: complete and validated (game at v0.5)
 - All five sourcebooks OCR'd, verified, and delivered.
 - Gamebook written and delivered.
-- Playable game built, graph-validated, and shipped.
+- Playable game built, graph-validated, and shipped; augmented through v0.5
+  (dossier, portraits, sound, five new nodes, cost transparency, sprite hook,
+  portrait customization). See §0 for the per-version log.
 - Generator inspected; import bridge built into the game and tested end to end.
 
 ### Possible next steps (none in progress)
@@ -251,4 +293,3 @@ detectable, yours to set otherwise).
   and re-run the DOM-stub graph walk / importer harness.
 
 *Qapla'.*
-
